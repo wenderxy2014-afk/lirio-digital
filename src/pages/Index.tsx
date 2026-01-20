@@ -255,10 +255,10 @@ const Index = () => {
               <div className="relative overflow-hidden rounded-3xl border shadow-lift">
                 <div className="absolute inset-0 z-0 p-8 md:p-10">
                   <div className="max-w-prose">
-                    <h2 className="font-display text-3xl text-foreground md:text-4xl">
-                      Lírio dos Vales • Belo Horizonte
+                    <h2 className="font-display text-3xl text-foreground md:text-4xl text-pretty">
+                      Igreja Batista Lírio dos Vales
                     </h2>
-                    <p className="mt-3 text-lg text-muted-foreground">Uma igreja em células.</p>
+                    <p className="mt-3 text-lg text-muted-foreground">Uma igreja em células. Um lugar de novos começos.</p>
                   </div>
                 </div>
                 <img
