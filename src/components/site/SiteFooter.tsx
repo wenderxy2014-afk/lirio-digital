@@ -64,20 +64,6 @@ export function SiteFooter() {
                   <span>Telefone: (31) 3496-2162</span>
                 </p>
 
-                <a
-                  href="https://wa.me/5531994231888"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover-scale inline-flex items-start gap-3 rounded-xl border bg-background/60 px-4 py-3 text-left text-foreground shadow-lift backdrop-blur"
-                  aria-label="Fale conosco pelo WhatsApp"
-                  title="WhatsApp"
-                >
-                  <MessageCircle className="mt-0.5 h-4 w-4 text-primary" />
-                  <span className="text-sm text-muted-foreground">
-                    31 9 9423 1888
-                  </span>
-                </a>
-
                 <p className="flex gap-3">
                   <MapPin className="mt-0.5 h-4 w-4 text-primary" />
                   <span>
