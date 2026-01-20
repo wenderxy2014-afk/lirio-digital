@@ -10,22 +10,20 @@ export default function MissionsPage() {
 
   return (
     <SiteLayout>
-      <header className="text-left">
-        <div className="relative overflow-hidden rounded-3xl border bg-card shadow-lift">
+      <header className="space-y-6 text-left">
+        <div className="relative overflow-hidden rounded-3xl border shadow-lift">
           <img
             src={missoesCapa}
             alt="Capa da página Missões"
             loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="h-[300px] w-full object-cover md:h-[400px]"
           />
-          <div className="absolute inset-0 bg-background/60" />
-          <div className="relative z-10 p-8 md:p-10">
-            <h1 className="font-display text-3xl md:text-4xl">Missões</h1>
-            <p className="mt-2 max-w-prose text-muted-foreground">
-              Projetos missionários e como contribuir.
-            </p>
-          </div>
-          <div className="relative z-10 h-24 md:h-28" />
+        </div>
+        <div className="px-2">
+          <h1 className="font-display text-3xl md:text-4xl">Missões</h1>
+          <p className="mt-2 max-w-prose text-muted-foreground">
+            Projetos missionários e como contribuir.
+          </p>
         </div>
       </header>
 
