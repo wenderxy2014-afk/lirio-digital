@@ -24,12 +24,16 @@ export default function MissionsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-left">
-              <p className="text-sm text-muted-foreground">{m.description ?? "Descrição a confirmar"}</p>
+              <div className="content-panel">
+                <p className="content-text">{m.description ?? "Descrição a confirmar"}</p>
+              </div>
+
               <div className="mt-4 text-sm">
                 <div className="font-medium">Localização</div>
-                <div className="text-muted-foreground">{m.location ?? "A confirmar"}</div>
+                <div className="content-meta">{m.location ?? "A confirmar"}</div>
               </div>
-              <div className="mt-4 rounded-2xl bg-brand-soft p-4">
+
+              <div className="mt-4 rounded-2xl bg-brand-soft p-4 ring-1 ring-border/60">
                 <div className="text-sm font-medium">Como contribuir</div>
                 <div className="mt-1 text-sm text-muted-foreground">
                   Pix do projeto: <span className="font-mono">{m.pix_key ?? settings?.pix_key ?? "SUA-CHAVE-PIX-AQUI"}</span>

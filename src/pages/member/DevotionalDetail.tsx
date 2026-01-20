@@ -30,7 +30,11 @@ export default function DevotionalDetailPage() {
           </CardHeader>
           <CardContent className="text-left">
             {data.author && <div className="text-sm font-medium">{data.author}</div>}
-            {data.body && <p className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">{data.body}</p>}
+            {data.body && (
+              <div className="mt-4 content-panel">
+                <p className="whitespace-pre-wrap content-text">{data.body}</p>
+              </div>
+            )}
             {data.video_url && (
               <a className="mt-4 inline-block brand-underline text-sm" href={data.video_url} target="_blank" rel="noreferrer">
                 Assistir vídeo

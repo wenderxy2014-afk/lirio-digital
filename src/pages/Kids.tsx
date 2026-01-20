@@ -19,17 +19,21 @@ export default function KidsPage() {
               <CardTitle className="font-display">{k.title}</CardTitle>
             </CardHeader>
             <CardContent className="text-left">
-              <p className="text-sm text-muted-foreground">{k.body ?? "Conteúdo a confirmar"}</p>
-              {k.video_url && (
-                <a className="mt-3 inline-block brand-underline text-sm" href={k.video_url} target="_blank" rel="noreferrer">
-                  Assistir vídeo
-                </a>
-              )}
-              {k.download_url && (
-                <a className="mt-3 ml-4 inline-block brand-underline text-sm" href={k.download_url} target="_blank" rel="noreferrer">
-                  Baixar material
-                </a>
-              )}
+              <div className="content-panel">
+                <p className="content-text">{k.body ?? "Conteúdo a confirmar"}</p>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                {k.video_url && (
+                  <a className="inline-block brand-underline text-sm" href={k.video_url} target="_blank" rel="noreferrer">
+                    Assistir vídeo
+                  </a>
+                )}
+                {k.download_url && (
+                  <a className="inline-block brand-underline text-sm" href={k.download_url} target="_blank" rel="noreferrer">
+                    Baixar material
+                  </a>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}
