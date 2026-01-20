@@ -72,10 +72,8 @@ export function SiteFooter() {
                   title="WhatsApp"
                 >
                   <MessageCircle className="mt-0.5 h-4 w-4 text-primary" />
-                  <span className="text-sm">
-                    <span className="font-medium">Fale conosco</span>
-                    <span className="text-muted-foreground"> — </span>
-                    <span className="text-muted-foreground">31 9 9423 1888</span>
+                  <span className="text-sm text-muted-foreground">
+                    31 9 9423 1888
                   </span>
                 </a>
 
