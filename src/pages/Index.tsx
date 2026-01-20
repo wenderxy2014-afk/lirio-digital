@@ -7,6 +7,7 @@ import { useCells, useEvents, useSettings } from "@/data/queries";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePointerGlow } from "@/hooks/usePointerGlow";
 import heroVideo from "@/assets/hero-bg.mp4";
+import igrejaBg from "@/assets/igreja-bg.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 10 },
@@ -199,6 +200,26 @@ const Index = () => {
             Ajuste textos oficiais, contatos e adicione imagens reais. O admin permite cadastrar conteúdo e moderar testemunhos.
           </p>
         </motion.div>
+      </section>
+
+      <section className="mt-16">
+        <div className="relative overflow-hidden rounded-3xl border bg-card shadow-lift">
+          <img
+            src={igrejaBg}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-background/70" />
+          <div className="relative z-10 p-8 md:p-10">
+            <div className="max-w-prose">
+              <h2 className="font-display text-2xl">Lírio dos Vales • Belo Horizonte</h2>
+              <p className="mt-2 text-muted-foreground">Uma igreja em células.</p>
+            </div>
+          </div>
+          <div className="relative z-10 h-40 md:h-52" />
+        </div>
       </section>
     </SiteLayout>
   );
