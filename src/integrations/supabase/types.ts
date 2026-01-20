@@ -175,6 +175,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ebd_devotionals: {
+        Row: {
+          bible_reference: string | null
+          body: string
+          created_at: string
+          day: string
+          id: string
+          model: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          bible_reference?: string | null
+          body: string
+          created_at?: string
+          day: string
+          id?: string
+          model?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          bible_reference?: string | null
+          body?: string
+          created_at?: string
+          day?: string
+          id?: string
+          model?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           cover_url: string | null

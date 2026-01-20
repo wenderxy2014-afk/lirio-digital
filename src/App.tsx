@@ -16,6 +16,7 @@ import DepartmentsPage from "@/pages/Departments";
 import KidsPage from "@/pages/Kids";
 import TestimonialsPage from "@/pages/Testimonials";
 import OfferingsPage from "@/pages/Offerings";
+import EbdPage from "@/pages/Ebd";
 
 import MemberHomePage from "@/pages/member/MemberHome";
 import DevotionalsPage from "@/pages/member/Devotionals";
@@ -39,6 +40,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/cultos" element={<EventsPage />} />
+            <Route path="/ebd" element={<EbdPage />} />
             <Route path="/celulas" element={<CellsPage />} />
             <Route path="/missoes" element={<MissionsPage />} />
             <Route path="/departamentos" element={<DepartmentsPage />} />
