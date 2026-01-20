@@ -33,8 +33,8 @@ export function WhatsAppFloatingChat() {
         <button
           type="button"
           className="group fixed bottom-6 right-6 z-50"
-          aria-label="Abrir atendimento via WhatsApp"
-          title="Fale conosco"
+          aria-label="Abrir chat via WhatsApp"
+          title="WhatsApp"
         >
           <span className="absolute inset-0 -z-10 rounded-full bg-primary/25 blur-xl transition-opacity group-hover:opacity-80" />
           <span className="absolute -inset-1 -z-10 rounded-full bg-primary/15 animate-[pulse_2.2s_ease-in-out_infinite]" />
@@ -51,7 +51,7 @@ export function WhatsAppFloatingChat() {
 
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle className="font-display">Fale conosco</DialogTitle>
+          <DialogTitle className="font-display">WhatsApp</DialogTitle>
           <DialogDescription>
             Envie uma mensagem e abriremos o WhatsApp para você continuar o atendimento.
           </DialogDescription>
