@@ -2,3 +2,6 @@ project_id = "mlbcbxajwzeocrmijqqf"
 
 [functions.ebd-devotional]
 verify_jwt = false
+
+[functions.kids-daily]
+verify_jwt = false

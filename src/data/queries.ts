@@ -108,6 +108,41 @@ export function useKids() {
   });
 }
 
+export function useKidsDailyToday() {
+  return useQuery({
+    queryKey: ["kids-daily", "today"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("kids-daily", { body: {} });
+      if (error) throw error;
+      return data as {
+        id: string;
+        day: string;
+        title: string;
+        bible_reference: string | null;
+        lesson_body: string;
+        activity: string;
+        quiz: unknown;
+        created_at: string;
+      };
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+}
+
+export function useKidsDailyList(limit = 14) {
+  return useQuery({
+    queryKey: ["kids-daily", "list", limit],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("kids_daily_contents")
+        .select("id,day,title,bible_reference")
+        .order("day", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
 export function useDevotionals() {
   return useQuery({
     queryKey: ["devotionals"],
