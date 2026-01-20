@@ -10,6 +10,10 @@ import { usePointerGlow } from "@/hooks/usePointerGlow";
 import heroVideo from "@/assets/hero-bg.mp4";
 import homeCardsVideo from "@/assets/home-cards-bg.mp4";
 import igrejaBg from "@/assets/igreja-bg.png";
+import bannerFamilia from "@/assets/banner-familia.png";
+import bannerMaturidade from "@/assets/banner-maturidade.png";
+import bannerHomens from "@/assets/banner-homens.png";
+import bannerCeia from "@/assets/banner-ceia.png";
 import {
   Carousel,
   CarouselContent,
@@ -240,75 +244,29 @@ const Index = () => {
           }}
           plugins={[
             Autoplay({
-              delay: 5000,
+              delay: 6000,
             }),
           ]}
           className="w-full"
         >
           <CarouselContent>
-            <CarouselItem>
-              <div className="relative overflow-hidden rounded-3xl border shadow-lift">
-                <div className="absolute inset-0 z-0 p-8 md:p-10">
-                  <div className="max-w-prose">
-                    <h2 className="font-display text-3xl text-foreground md:text-4xl text-pretty">
-                      Igreja Batista Lírio dos Vales
-                    </h2>
-                    <p className="mt-3 text-lg text-muted-foreground">Uma igreja em células. Um lugar de novos começos.</p>
-                  </div>
+            {[
+              { src: bannerFamilia, alt: "Culto da Família" },
+              { src: bannerMaturidade, alt: "Cultura da Maturidade" },
+              { src: bannerHomens, alt: "Culto da Rede de Homens" },
+              { src: bannerCeia, alt: "A Ceia do Senhor" },
+            ].map((banner, index) => (
+              <CarouselItem key={index}>
+                <div className="relative overflow-hidden rounded-3xl border shadow-lift">
+                  <img
+                    src={banner.src}
+                    alt={banner.alt}
+                    loading="lazy"
+                    className="w-full object-cover"
+                  />
                 </div>
-                <img
-                  src={igrejaBg}
-                  alt="Igreja Batista Lírio dos Vales"
-                  loading="lazy"
-                  className="relative z-10 h-[400px] w-full object-cover opacity-60 md:h-[500px]"
-                />
-                <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-background via-transparent to-background/40" />
-              </div>
-            </CarouselItem>
-
-            <CarouselItem>
-              <div className="relative overflow-hidden rounded-3xl border shadow-lift">
-                <div className="absolute inset-0 z-0 p-8 md:p-10">
-                  <div className="max-w-prose">
-                    <h2 className="font-display text-3xl text-foreground md:text-4xl">
-                      IBLVONLINE
-                    </h2>
-                    <p className="mt-3 text-lg text-muted-foreground">
-                      Uma igreja em células.
-                    </p>
-                  </div>
-                </div>
-                <img
-                  src={igrejaBg}
-                  alt="Comunidade da Igreja"
-                  loading="lazy"
-                  className="relative z-10 h-[400px] w-full object-cover opacity-60 md:h-[500px]"
-                />
-                <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-background via-transparent to-background/40" />
-              </div>
-            </CarouselItem>
-
-            <CarouselItem>
-              <div className="relative overflow-hidden rounded-3xl border shadow-lift">
-                <div className="absolute inset-0 z-0 p-8 md:p-10">
-                  <div className="max-w-prose">
-                    <h2 className="font-display text-3xl text-foreground md:text-4xl">
-                      IBLV_BH
-                    </h2>
-                    <p className="mt-3 text-lg text-muted-foreground">
-                      #liriodosvalesbh
-                    </p>
-                  </div>
-                </div>
-                <img
-                  src={igrejaBg}
-                  alt="Celebração da Igreja"
-                  loading="lazy"
-                  className="relative z-10 h-[400px] w-full object-cover opacity-60 md:h-[500px]"
-                />
-                <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-background via-transparent to-background/40" />
-              </div>
-            </CarouselItem>
+              </CarouselItem>
+            ))}
           </CarouselContent>
           <CarouselPrevious className="left-4" />
           <CarouselNext className="right-4" />
