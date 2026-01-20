@@ -174,5 +174,26 @@ All colors MUST be HSL.
   .content-meta {
     @apply text-sm text-foreground/80;
   }
+
+  /* Kids page mascots sizing (override Tailwind height utilities for larger visuals) */
+  img[alt="Mascotes da Área Kids"] {
+    height: 10rem !important;
+    width: auto;
+  }
+
+  img[alt="Mascote da Área Kids"] {
+    height: 12rem !important;
+    width: auto;
+  }
+
+  @media (min-width: 768px) {
+    img[alt="Mascotes da Área Kids"] {
+      height: 13rem !important;
+    }
+
+    img[alt="Mascote da Área Kids"] {
+      height: 16rem !important;
+    }
+  }
 }
 
