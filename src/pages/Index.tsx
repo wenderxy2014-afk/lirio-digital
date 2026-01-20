@@ -36,13 +36,13 @@ const Index = () => {
         <div className="relative z-10 grid gap-10 md:grid-cols-2 md:items-center">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm/6 opacity-90">Bem-vindo(a)</p>
+              <p className="text-sm/6 font-semibold">Bem-vindo(a)</p>
               <HomeAudioToggle />
             </div>
-            <h1 className="mt-2 text-balance font-display text-4xl tracking-tight md:text-5xl">
+            <h1 className="mt-2 text-balance font-display text-4xl font-bold tracking-tight md:text-5xl">
               Um lugar para pertencer, crescer e servir.
             </h1>
-            <p className="mt-4 max-w-prose text-base/7 opacity-95">
+            <p className="mt-4 max-w-prose text-base/7 font-medium">
               Acompanhe nossos cultos e eventos, encontre uma célula perto de você e participe da vida da igreja.
             </p>
 
@@ -104,9 +104,9 @@ const Index = () => {
               />
               <div className="absolute inset-0 bg-background/10" />
               <div className="relative z-10 grid h-full place-items-end p-6">
-                <div className="max-w-xs rounded-2xl bg-background/10 p-4 text-left ring-1 ring-white/20">
-                  <div className="font-display text-lg">Bem-vindo(a)!</div>
-                  <p className="mt-1 text-sm opacity-90">
+                <div className="max-w-xs rounded-2xl bg-background/20 p-4 text-left ring-1 ring-white/30 backdrop-blur-sm">
+                  <div className="font-display text-lg font-bold text-primary-foreground">Bem-vindo(a)!</div>
+                  <p className="mt-1 text-sm font-medium text-primary-foreground">
                     Você na página da IBLVBH uma igreja que se importa.
                   </p>
                 </div>
