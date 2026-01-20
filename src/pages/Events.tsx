@@ -16,7 +16,7 @@ export default function EventsPage() {
       </header>
 
       {settings?.live_stream_url && (
-        <div className="mt-6 rounded-3xl border bg-brand-soft p-6 text-left">
+        <div className="mt-6 rounded-3xl border bg-brand-soft p-6 text-left shadow-lift">
           <div className="font-medium">Transmissão ao vivo</div>
           <a className="mt-1 inline-block brand-underline" href={settings.live_stream_url} target="_blank" rel="noreferrer">
             Acessar culto online
@@ -31,10 +31,12 @@ export default function EventsPage() {
               <CardTitle className="font-display">{e.title}</CardTitle>
             </CardHeader>
             <CardContent className="text-left">
-              <p className="text-sm text-muted-foreground">{e.description ?? "Descrição a confirmar"}</p>
+              <div className="content-panel">
+                <p className="content-text">{e.description ?? "Descrição a confirmar"}</p>
+              </div>
               <div className="mt-4 text-sm">
                 <div className="font-medium">Local</div>
-                <div className="text-muted-foreground">{e.location ?? "A confirmar"}</div>
+                <div className="content-meta">{e.location ?? "A confirmar"}</div>
               </div>
             </CardContent>
           </Card>

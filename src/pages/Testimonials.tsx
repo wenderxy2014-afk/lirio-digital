@@ -93,7 +93,11 @@ export default function TestimonialsPage() {
             </CardHeader>
             <CardContent className="text-left">
               {t.person_name && <div className="text-sm font-medium">{t.person_name}</div>}
-              {t.body && <p className="mt-2 text-sm text-muted-foreground">{t.body}</p>}
+              {t.body && (
+                <div className="mt-3 content-panel">
+                  <p className="content-text">{t.body}</p>
+                </div>
+              )}
               {t.video_url && (
                 <a className="mt-3 inline-block brand-underline text-sm" href={t.video_url} target="_blank" rel="noreferrer">
                   Assistir vídeo

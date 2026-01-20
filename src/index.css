@@ -143,5 +143,18 @@ All colors MUST be HSL.
   .brand-underline:hover:after {
     transform: scaleX(1);
   }
+
+  /* Content emphasis (used for long text blocks across pages) */
+  .content-panel {
+    @apply rounded-2xl bg-accent/40 p-4 ring-1 ring-border/60 shadow-lift;
+  }
+
+  .content-text {
+    @apply text-sm leading-relaxed text-foreground/80;
+  }
+
+  .content-meta {
+    @apply text-sm text-foreground/70;
+  }
 }
 

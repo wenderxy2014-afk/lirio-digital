@@ -27,17 +27,15 @@ export default function EbdPage() {
             {today && (
               <>
                 <div className="font-display text-2xl">{today.title}</div>
-                {today.bible_reference && (
-                  <div className="mt-2 text-sm text-muted-foreground">{today.bible_reference}</div>
-                )}
+                {today.bible_reference && <div className="mt-2 content-meta">{today.bible_reference}</div>}
                 <Separator className="my-4" />
-                <div className="whitespace-pre-wrap text-sm text-muted-foreground">{today.body}</div>
+                <div className="content-panel">
+                  <div className="whitespace-pre-wrap content-text">{today.body}</div>
+                </div>
               </>
             )}
 
-            {!isLoading && !today && (
-              <div className="text-sm text-muted-foreground">Ainda não há devocional de hoje.</div>
-            )}
+            {!isLoading && !today && <div className="text-sm text-muted-foreground">Ainda não há devocional de hoje.</div>}
           </CardContent>
         </Card>
       </section>
