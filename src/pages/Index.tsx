@@ -68,23 +68,23 @@ const Index = () => {
             </div>
 
             {settings?.live_stream_url && (
-              <div className="mt-6 overflow-hidden rounded-2xl bg-background/95 p-4 ring-1 ring-primary/30 shadow-glow backdrop-blur-sm">
+              <div className="mt-6 overflow-hidden rounded-2xl bg-brand p-5 shadow-glow">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-semibold text-foreground">
+                  <div className="text-base font-bold text-primary-foreground">
                     Transmissão ao vivo
-                    <span className="ml-2 align-middle pulse inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+                    <span className="ml-2 align-middle pulse inline-block h-2 w-2 rounded-full bg-primary-foreground" />
                   </div>
-                  <span className="hidden rounded-xl bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-primary/20 md:inline-block">
+                  <span className="hidden rounded-xl bg-background/20 px-4 py-1.5 text-sm font-semibold text-primary-foreground ring-1 ring-white/30 md:inline-block">
                     Ao vivo
                   </span>
                 </div>
                 <a
-                  className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-foreground brand-underline"
+                  className="mt-3 inline-flex items-center gap-2 text-base font-bold text-primary-foreground brand-underline"
                   href={settings.live_stream_url}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Acessar culto online <ArrowRight className="h-4 w-4" />
+                  Acessar culto online <ArrowRight className="h-5 w-5" />
                 </a>
               </div>
             )}
