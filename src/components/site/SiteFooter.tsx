@@ -1,4 +1,4 @@
-import { Facebook, Instagram, MapPin, Phone, Clock } from "lucide-react";
+import { Facebook, Instagram, MapPin, Phone, Clock, MessageCircle } from "lucide-react";
 import igrejaBg from "@/assets/igreja-bg.png";
 
 export function SiteFooter() {
@@ -62,6 +62,23 @@ export function SiteFooter() {
                   <Phone className="mt-0.5 h-4 w-4 text-primary" />
                   <span>Telefone: (31) 3496-2162</span>
                 </p>
+
+                <a
+                  href="https://wa.me/5531994231888"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover-scale inline-flex items-start gap-3 rounded-xl border bg-background/60 px-4 py-3 text-left text-foreground shadow-lift backdrop-blur"
+                  aria-label="Fale conosco pelo WhatsApp"
+                  title="WhatsApp"
+                >
+                  <MessageCircle className="mt-0.5 h-4 w-4 text-primary" />
+                  <span className="text-sm">
+                    <span className="font-medium">Fale conosco</span>
+                    <span className="text-muted-foreground"> — </span>
+                    <span className="text-muted-foreground">31 9 9423 1888</span>
+                  </span>
+                </a>
+
                 <p className="flex gap-3">
                   <MapPin className="mt-0.5 h-4 w-4 text-primary" />
                   <span>
