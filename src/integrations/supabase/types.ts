@@ -283,6 +283,48 @@ export type Database = {
         }
         Relationships: []
       }
+      kids_daily_contents: {
+        Row: {
+          activity: string
+          bible_reference: string | null
+          created_at: string
+          day: string
+          id: string
+          is_published: boolean
+          lesson_body: string
+          model: string | null
+          quiz: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          activity: string
+          bible_reference?: string | null
+          created_at?: string
+          day: string
+          id?: string
+          is_published?: boolean
+          lesson_body: string
+          model?: string | null
+          quiz?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          activity?: string
+          bible_reference?: string | null
+          created_at?: string
+          day?: string
+          id?: string
+          is_published?: boolean
+          lesson_body?: string
+          model?: string | null
+          quiz?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       missions: {
         Row: {
           cover_url: string | null
