@@ -112,12 +112,7 @@ const Index = () => {
               />
               <div className="absolute inset-0 bg-background/10" />
               <div className="relative z-10 grid h-full place-items-end p-6">
-                <div className="max-w-xs rounded-2xl bg-background/20 p-4 text-left ring-1 ring-white/30 backdrop-blur-sm">
-                  <div className="font-display text-lg font-bold text-primary-foreground">Bem-vindo(a)!</div>
-                  <p className="mt-1 text-sm font-medium text-primary-foreground">
-                    Você na página da IBLVBH uma igreja que se importa.
-                  </p>
-                </div>
+                {/* Texto removido conforme solicitado */}
               </div>
             </div>
             {!reduceMotion && (
