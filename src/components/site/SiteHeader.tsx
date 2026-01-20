@@ -6,6 +6,7 @@ import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
 const nav = [
   { to: "/", label: "Início" },
   { to: "/cultos", label: "Cultos & Eventos" },
+  { to: "/ebd", label: "EBD" },
   { to: "/celulas", label: "Células" },
   { to: "/missoes", label: "Missões" },
   { to: "/kids", label: "Kids" },
