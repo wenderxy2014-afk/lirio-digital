@@ -36,7 +36,7 @@ export function SiteHeader() {
             <NavLink
               key={item.to}
               to={item.to}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground brand-underline"
+              className="text-base text-muted-foreground transition-colors hover:text-foreground brand-underline"
               activeClassName="text-foreground"
             >
               {item.label}
@@ -73,7 +73,7 @@ export function SiteHeader() {
             <NavLink
               key={item.to}
               to={item.to}
-              className="rounded-lg px-2 py-2 text-center text-xs text-muted-foreground"
+              className="rounded-lg px-2 py-2 text-center text-sm text-muted-foreground"
               activeClassName="bg-accent text-foreground"
             >
               {item.label}
