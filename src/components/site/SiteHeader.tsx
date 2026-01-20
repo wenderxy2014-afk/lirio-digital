@@ -2,6 +2,7 @@ import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/iblv-logo.png";
 import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
+import { MemberAuthDialog } from "./MemberAuthDialog";
 
 const nav = [
   { to: "/", label: "Início" },
@@ -60,9 +61,11 @@ export function SiteHeader() {
               </Button>
             </>
           ) : (
-            <Button asChild variant="brand" size="sm">
-              <NavLink to="/auth">Entrar</NavLink>
-            </Button>
+            <MemberAuthDialog>
+              <Button variant="brand" size="sm">
+                Membros
+              </Button>
+            </MemberAuthDialog>
           )}
         </div>
       </div>
