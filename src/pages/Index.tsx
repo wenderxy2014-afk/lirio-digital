@@ -59,7 +59,7 @@ const Index = () => {
               </Button>
               <Button asChild variant="soft" size="xl">
                 <NavLink to="/ofertas">
-                  Ofertas e Dízimos (Pix) <HeartHandshake />
+                  Ofertas <HeartHandshake />
                 </NavLink>
               </Button>
               <Button asChild variant="soft" size="xl">
@@ -205,7 +205,7 @@ const Index = () => {
               </p>
               <div className="mt-4">
                 <Button asChild variant="brand" size="sm">
-                  <NavLink to="/ofertas">Abrir Pix</NavLink>
+                  <NavLink to="/ofertas">Ofertar</NavLink>
                 </Button>
               </div>
             </CardContent>

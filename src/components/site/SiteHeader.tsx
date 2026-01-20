@@ -12,7 +12,7 @@ const nav = [
   { to: "/missoes", label: "Missões" },
   { to: "/kids", label: "Kids" },
   { to: "/testemunhos", label: "Testemunhos" },
-  { to: "/ofertas", label: "Pix" },
+  { to: "/ofertas", label: "Ofertas" },
 ];
 
 export function SiteHeader() {
