@@ -8,6 +8,7 @@ import { useCells, useEvents, useSettings } from "@/data/queries";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePointerGlow } from "@/hooks/usePointerGlow";
 import heroVideo from "@/assets/hero-bg.mp4";
+import homeCardsVideo from "@/assets/home-cards-bg.mp4";
 import igrejaBg from "@/assets/igreja-bg.png";
 
 const fadeUp = {
@@ -122,80 +123,94 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="mt-12 grid gap-6 md:grid-cols-3">
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display">
-              <Calendar className="h-5 w-5 text-primary" /> Próximos eventos
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-left">
-            <ul className="space-y-3">
-              {(events ?? []).slice(0, 3).map((e) => (
-                <li key={e.id} className="rounded-xl bg-brand-soft p-3">
-                  <div className="font-medium">{e.title}</div>
-                  <div className="text-sm text-muted-foreground">{e.location ?? "Local a confirmar"}</div>
-                </li>
-              ))}
-              {(!events || events.length === 0) && (
-                <li className="rounded-xl bg-brand-soft p-3 text-sm text-muted-foreground">
-                  Nenhum evento cadastrado ainda.
-                </li>
-              )}
-            </ul>
-            <div className="mt-4">
-              <Button asChild variant="soft" size="sm">
-                <NavLink to="/cultos">Ver agenda</NavLink>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <section className="relative mt-12 overflow-hidden rounded-3xl border bg-card p-6 shadow-lift md:p-8">
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          src={homeCardsVideo}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-label="Vídeo de fundo da seção de destaques"
+        />
+        <div className="absolute inset-0 bg-background/70" />
 
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display">
-              <Users className="h-5 w-5 text-primary" /> Encontre uma célula
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-left">
-            <p className="text-sm text-muted-foreground">
-              Células são encontros durante a semana para comunhão, cuidado e crescimento.
-            </p>
-            <div className="mt-4 space-y-2">
-              {(cells ?? []).slice(0, 2).map((c) => (
-                <div key={c.id} className="rounded-xl bg-brand-soft p-3">
-                  <div className="font-medium">{c.name}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {c.meeting_day ?? "Dia"} • {c.meeting_time ?? "Horário"}
+        <div className="relative z-10 grid gap-6 md:grid-cols-3">
+          <Card className="overflow-hidden">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-display">
+                <Calendar className="h-5 w-5 text-primary" /> Próximos eventos
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-left">
+              <ul className="space-y-3">
+                {(events ?? []).slice(0, 3).map((e) => (
+                  <li key={e.id} className="rounded-xl bg-brand-soft p-3">
+                    <div className="font-medium">{e.title}</div>
+                    <div className="text-sm text-muted-foreground">{e.location ?? "Local a confirmar"}</div>
+                  </li>
+                ))}
+                {(!events || events.length === 0) && (
+                  <li className="rounded-xl bg-brand-soft p-3 text-sm text-muted-foreground">
+                    Nenhum evento cadastrado ainda.
+                  </li>
+                )}
+              </ul>
+              <div className="mt-4">
+                <Button asChild variant="soft" size="sm">
+                  <NavLink to="/cultos">Ver agenda</NavLink>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-display">
+                <Users className="h-5 w-5 text-primary" /> Encontre uma célula
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-left">
+              <p className="text-sm text-muted-foreground">
+                Células são encontros durante a semana para comunhão, cuidado e crescimento.
+              </p>
+              <div className="mt-4 space-y-2">
+                {(cells ?? []).slice(0, 2).map((c) => (
+                  <div key={c.id} className="rounded-xl bg-brand-soft p-3">
+                    <div className="font-medium">{c.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {c.meeting_day ?? "Dia"} • {c.meeting_time ?? "Horário"}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4">
-              <Button asChild variant="brand" size="sm">
-                <NavLink to="/celulas">Ver todas</NavLink>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+              <div className="mt-4">
+                <Button asChild variant="brand" size="sm">
+                  <NavLink to="/celulas">Ver todas</NavLink>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display">
-              <HeartHandshake className="h-5 w-5 text-primary" /> Contribua
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-left">
-            <p className="text-sm text-muted-foreground">
-              Ofertas e dízimos ajudam a manter nosso trabalho e alcançar mais vidas.
-            </p>
-            <div className="mt-4">
-              <Button asChild variant="brand" size="sm">
-                <NavLink to="/ofertas">Abrir Pix</NavLink>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="overflow-hidden">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-display">
+                <HeartHandshake className="h-5 w-5 text-primary" /> Contribua
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-left">
+              <p className="text-sm text-muted-foreground">
+                Ofertas e dízimos ajudam a manter nosso trabalho e alcançar mais vidas.
+              </p>
+              <div className="mt-4">
+                <Button asChild variant="brand" size="sm">
+                  <NavLink to="/ofertas">Abrir Pix</NavLink>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </section>
 
       <section className="mt-14">
