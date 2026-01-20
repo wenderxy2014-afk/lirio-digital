@@ -67,7 +67,9 @@ export default function AuthPage() {
       <div className="mx-auto max-w-lg">
         <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle className="font-display text-2xl">{mode === "login" ? "Entrar" : "Criar conta"}</CardTitle>
+            <CardTitle className="font-display text-2xl">
+              {mode === "login" ? "Acesso Administrativo" : "Criar conta de Administrador"}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 text-left">
             <div className="space-y-2">
