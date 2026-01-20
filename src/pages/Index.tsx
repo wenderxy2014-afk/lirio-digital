@@ -107,7 +107,7 @@ const Index = () => {
                 <div className="max-w-xs rounded-2xl bg-background/10 p-4 text-left ring-1 ring-white/20">
                   <div className="font-display text-lg">Bem-vindo(a)!</div>
                   <p className="mt-1 text-sm opacity-90">
-                    Vídeo de fundo aplicado (você pode trocar por outro quando quiser).
+                    Você na página da IBLVBH uma igreja que se importa.
                   </p>
                 </div>
               </div>
