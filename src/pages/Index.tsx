@@ -86,7 +86,7 @@ const Index = () => {
           </div>
 
           <div className="relative">
-            <div className="relative aspect-[4/3] min-h-[22rem] overflow-hidden rounded-3xl bg-background/10 ring-1 ring-white/20 md:min-h-[30rem]">
+            <div className="relative aspect-[4/3] max-h-[22rem] overflow-hidden rounded-3xl bg-background/10 ring-1 ring-white/20 md:aspect-[16/10] md:max-h-[26rem]">
               <video
                 className="absolute inset-0 h-full w-full object-cover"
                 src={heroVideo}
