@@ -2,6 +2,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useMissions, useSettings } from "@/data/queries";
+import missoesCapa from "@/assets/missoes-capa.jpg";
 
 export default function MissionsPage() {
   const { data: missions } = useMissions();
@@ -10,8 +11,22 @@ export default function MissionsPage() {
   return (
     <SiteLayout>
       <header className="text-left">
-        <h1 className="font-display text-3xl">Missões</h1>
-        <p className="mt-2 text-muted-foreground">Projetos missionários e como contribuir.</p>
+        <div className="relative overflow-hidden rounded-3xl border bg-card shadow-lift">
+          <img
+            src={missoesCapa}
+            alt="Capa da página Missões"
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-background/60" />
+          <div className="relative z-10 p-8 md:p-10">
+            <h1 className="font-display text-3xl md:text-4xl">Missões</h1>
+            <p className="mt-2 max-w-prose text-muted-foreground">
+              Projetos missionários e como contribuir.
+            </p>
+          </div>
+          <div className="relative z-10 h-24 md:h-28" />
+        </div>
       </header>
 
       <section className="mt-8 grid gap-6 md:grid-cols-2">
