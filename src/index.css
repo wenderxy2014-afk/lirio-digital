@@ -146,11 +146,15 @@ All colors MUST be HSL.
 
   /* Content emphasis (used for long text blocks across pages) */
   .content-panel {
-    @apply relative overflow-hidden rounded-2xl p-5 ring-1 ring-border/70 shadow-lift;
+    @apply relative overflow-hidden rounded-2xl p-6 ring-1 ring-border/70 shadow-lift;
     background-image:
-      radial-gradient(900px circle at 15% 20%, rgba(255, 255, 255, 0.38), transparent 42%),
-      radial-gradient(700px circle at 85% 30%, rgba(255, 255, 255, 0.22), transparent 45%),
-      var(--brand-gradient-soft);
+      radial-gradient(900px circle at 15% 20%, rgba(255, 255, 255, 0.48), transparent 42%),
+      radial-gradient(700px circle at 85% 30%, rgba(255, 255, 255, 0.28), transparent 45%),
+      linear-gradient(
+        180deg,
+        hsl(var(--primary-gradient-from) / 0.22) 0%,
+        hsl(var(--primary-gradient-to) / 0.18) 100%
+      );
   }
 
   .content-panel:after {
@@ -158,17 +162,17 @@ All colors MUST be HSL.
     @apply pointer-events-none absolute inset-0;
     background: linear-gradient(
       180deg,
-      hsl(var(--background) / 0.12) 0%,
-      hsl(var(--background) / 0.32) 100%
+      hsl(var(--background) / 0.06) 0%,
+      hsl(var(--background) / 0.26) 100%
     );
   }
 
   .content-text {
-    @apply relative text-[0.95rem] leading-relaxed text-foreground/85;
+    @apply relative text-[0.95rem] leading-relaxed text-foreground/90;
   }
 
   .content-meta {
-    @apply text-sm text-foreground/75;
+    @apply text-sm text-foreground/80;
   }
 }
 
