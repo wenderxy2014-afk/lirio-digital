@@ -68,18 +68,18 @@ const Index = () => {
             </div>
 
             {settings?.live_stream_url && (
-              <div className="mt-6 overflow-hidden rounded-2xl bg-background/15 p-4 ring-1 ring-white/25 shadow-glow">
+              <div className="mt-6 overflow-hidden rounded-2xl bg-background/95 p-4 ring-1 ring-primary/30 shadow-glow backdrop-blur-sm">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-sm font-semibold text-primary-foreground">
+                  <div className="text-sm font-semibold text-foreground">
                     Transmissão ao vivo
-                    <span className="ml-2 align-middle pulse inline-block h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+                    <span className="ml-2 align-middle pulse inline-block h-1.5 w-1.5 rounded-full bg-primary" />
                   </div>
-                  <span className="hidden rounded-xl bg-background/10 px-3 py-1 text-xs font-medium text-primary-foreground ring-1 ring-white/20 md:inline-block">
+                  <span className="hidden rounded-xl bg-primary/10 px-3 py-1 text-xs font-medium text-primary ring-1 ring-primary/20 md:inline-block">
                     Ao vivo
                   </span>
                 </div>
                 <a
-                  className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-primary-foreground brand-underline"
+                  className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-foreground brand-underline"
                   href={settings.live_stream_url}
                   target="_blank"
                   rel="noreferrer"
