@@ -47,7 +47,7 @@ const Index = () => {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild variant="default" size="xl">
+              <Button asChild variant="gradient" size="xl">
                 <NavLink to="/cultos">
                   Cultos & Eventos <ArrowRight />
                 </NavLink>
