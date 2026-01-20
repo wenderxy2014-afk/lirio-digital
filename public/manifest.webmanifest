@@ -1,0 +1,21 @@
+{
+  "name": "Igreja Batista Lírio dos Vales",
+  "short_name": "IBLV",
+  "description": "Site oficial da Igreja Batista Lírio dos Vales",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff7f8",
+  "theme_color": "#e33c7a",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
