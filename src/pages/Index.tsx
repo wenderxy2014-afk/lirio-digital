@@ -125,7 +125,7 @@ const Index = () => {
 
       <section className="relative mt-12 overflow-hidden rounded-3xl border bg-card p-6 shadow-lift md:p-8">
         <video
-          className="absolute inset-0 h-full w-full object-cover"
+          className="pointer-events-none absolute inset-0 z-20 h-full w-full object-cover opacity-40"
           src={homeCardsVideo}
           autoPlay
           muted
@@ -134,7 +134,7 @@ const Index = () => {
           preload="metadata"
           aria-label="Vídeo de fundo da seção de destaques"
         />
-        <div className="absolute inset-0 bg-background/70" />
+        <div className="pointer-events-none absolute inset-0 z-30 bg-background/10" />
 
         <div className="relative z-10 grid gap-6 md:grid-cols-3">
           <Card className="overflow-hidden">
