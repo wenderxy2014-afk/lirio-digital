@@ -3,6 +3,9 @@ import { KidsDailyQuiz } from "@/components/kids/KidsDailyQuiz";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useKids, useKidsDailyList, useKidsDailyToday } from "@/data/queries";
 
+import kidsMascote from "@/assets/kids-mascote.png";
+import kidsMascotes from "@/assets/kids-mascotes.png";
+
 export default function KidsPage() {
   const { data: today, isLoading: isTodayLoading, error: todayError } = useKidsDailyToday();
   const { data: dailyList } = useKidsDailyList(14);
@@ -11,8 +14,27 @@ export default function KidsPage() {
   return (
     <SiteLayout>
       <header className="text-left">
-        <h1 className="font-display text-3xl">Área Kids</h1>
-        <p className="mt-2 text-muted-foreground">Lição do dia, atividades e joguinhos bíblicos (7–10 anos).</p>
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="font-display text-3xl">Área Kids</h1>
+            <p className="mt-2 text-muted-foreground">Lição do dia, atividades e joguinhos bíblicos (7–10 anos).</p>
+          </div>
+
+          <div className="flex items-end gap-4">
+            <img
+              src={kidsMascotes}
+              alt="Mascotes da Área Kids"
+              loading="lazy"
+              className="h-28 w-auto select-none"
+            />
+            <img
+              src={kidsMascote}
+              alt="Mascote da Área Kids"
+              loading="lazy"
+              className="h-32 w-auto select-none"
+            />
+          </div>
+        </div>
       </header>
 
       <section className="mt-8 grid gap-6 lg:grid-cols-3">
