@@ -1,4 +1,5 @@
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { HomeAudioToggle } from "@/components/site/HomeAudioToggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Calendar, HeartHandshake, Users } from "lucide-react";
@@ -33,7 +34,10 @@ const Index = () => {
       >
         <div className="relative z-10 grid gap-10 md:grid-cols-2 md:items-center">
           <div>
-            <p className="text-sm/6 opacity-90">Bem-vindo(a)</p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm/6 opacity-90">Bem-vindo(a)</p>
+              <HomeAudioToggle />
+            </div>
             <h1 className="mt-2 text-balance font-display text-4xl tracking-tight md:text-5xl">
               Um lugar para pertencer, crescer e servir.
             </h1>
