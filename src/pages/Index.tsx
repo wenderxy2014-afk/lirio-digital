@@ -1,11 +1,12 @@
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Calendar, HeartHandshake, MapPin, Users } from "lucide-react";
+import { ArrowRight, Calendar, HeartHandshake, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useCells, useEvents, useSettings } from "@/data/queries";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePointerGlow } from "@/hooks/usePointerGlow";
+import heroVideo from "@/assets/hero-bg.mp4";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 10 },
@@ -76,15 +77,23 @@ const Index = () => {
           </div>
 
           <div className="relative">
-            <div className="aspect-[4/3] overflow-hidden rounded-3xl bg-background/10 ring-1 ring-white/20">
-              <div className="grid h-full place-items-center p-8">
-                <div className="text-center">
-                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-background/15">
-                    <MapPin className="h-6 w-6" />
-                  </div>
-                  <div className="mt-4 font-display text-2xl">Nossa Igreja</div>
-                  <p className="mt-2 text-sm opacity-90">
-                    Substitua aqui por uma foto/vídeo grande da igreja (home hero).
+            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-background/10 ring-1 ring-white/20">
+              <video
+                className="absolute inset-0 h-full w-full object-cover"
+                src={heroVideo}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-label="Vídeo de fundo do hero"
+              />
+              <div className="absolute inset-0 bg-background/10" />
+              <div className="relative z-10 grid h-full place-items-end p-6">
+                <div className="max-w-xs rounded-2xl bg-background/10 p-4 text-left ring-1 ring-white/20">
+                  <div className="font-display text-lg">Bem-vindo(a)!</div>
+                  <p className="mt-1 text-sm opacity-90">
+                    Vídeo de fundo aplicado (você pode trocar por outro quando quiser).
                   </p>
                 </div>
               </div>
