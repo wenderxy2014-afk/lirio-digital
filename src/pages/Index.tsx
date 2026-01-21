@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Calendar, HeartHandshake, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useCells, useEvents, useSettings } from "@/data/queries";
+import { useAuth } from "@/providers/AuthProvider";
+import { MemberAuthDialog } from "@/components/site/MemberAuthDialog";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePointerGlow } from "@/hooks/usePointerGlow";
 import heroVideo from "@/assets/hero-bg.mp4";
@@ -34,6 +36,7 @@ const Index = () => {
   const { data: settings } = useSettings();
   const { data: events } = useEvents();
   const { data: cells } = useCells();
+  const { user } = useAuth();
 
   return (
     <SiteLayout>
@@ -75,8 +78,21 @@ const Index = () => {
                 </NavLink>
               </Button>
               <Button asChild variant="soft" size="xl">
-                <NavLink to="/membro">Área do Membro</NavLink>
+                <NavLink to="/ofertas">
+                  Ofertas <HeartHandshake />
+                </NavLink>
               </Button>
+              {user ? (
+                <Button asChild variant="soft" size="xl">
+                  <NavLink to="/membro">Área do Membro</NavLink>
+                </Button>
+              ) : (
+                <MemberAuthDialog>
+                  <Button variant="soft" size="xl">
+                    Área do Membro
+                  </Button>
+                </MemberAuthDialog>
+              )}
             </div>
 
             {settings?.live_stream_url && (

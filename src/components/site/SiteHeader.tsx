@@ -32,13 +32,13 @@ export function SiteHeader() {
           </div>
         </NavLink>
 
-        <nav className="hidden items-center gap-4 md:flex">
+        <nav className="hidden items-center gap-6 md:flex">
           {nav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              className="text-base text-muted-foreground transition-colors hover:text-foreground brand-underline"
-              activeClassName="text-foreground"
+              className="text-lg font-bold text-muted-foreground/80 transition-colors hover:text-primary brand-underline"
+              activeClassName="text-primary font-extrabold"
             >
               {item.label}
             </NavLink>
