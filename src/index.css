@@ -116,7 +116,10 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: theme("fontFamily.display");
     letter-spacing: -0.02em;
   }
@@ -150,21 +153,17 @@ All colors MUST be HSL.
     background-image:
       radial-gradient(900px circle at 15% 20%, rgba(255, 255, 255, 0.48), transparent 42%),
       radial-gradient(700px circle at 85% 30%, rgba(255, 255, 255, 0.28), transparent 45%),
-      linear-gradient(
-        180deg,
+      linear-gradient(180deg,
         hsl(var(--primary-gradient-from) / 0.22) 0%,
-        hsl(var(--primary-gradient-to) / 0.18) 100%
-      );
+        hsl(var(--primary-gradient-to) / 0.18) 100%);
   }
 
   .content-panel:after {
     content: "";
     @apply pointer-events-none absolute inset-0;
-    background: linear-gradient(
-      180deg,
-      hsl(var(--background) / 0.06) 0%,
-      hsl(var(--background) / 0.26) 100%
-    );
+    background: linear-gradient(180deg,
+        hsl(var(--background) / 0.06) 0%,
+        hsl(var(--background) / 0.26) 100%);
   }
 
   .content-text {
@@ -186,6 +185,7 @@ All colors MUST be HSL.
     width: auto;
   }
 
+
   @media (min-width: 768px) {
     img[alt="Mascotes da Área Kids"] {
       height: 13rem !important;
@@ -195,5 +195,20 @@ All colors MUST be HSL.
       height: 16rem !important;
     }
   }
-}
 
+  @keyframes wind-sway {
+
+    0%,
+    100% {
+      transform: scale(1.1) translate(0, 0);
+    }
+
+    50% {
+      transform: scale(1.15) translate(-1%, 1%);
+    }
+  }
+
+  .animate-wind {
+    animation: wind-sway 20s ease-in-out infinite alternate;
+  }
+}
