@@ -25,13 +25,13 @@ export default function KidsPage() {
               src={kidsGroupNew}
               alt="Turma Kids"
               loading="lazy"
-              className="h-24 w-auto select-none sm:h-32"
+              className="h-32 w-auto select-none sm:h-48"
             />
             <img
               src={kidsBoyNew}
               alt="Mascote Kids"
               loading="lazy"
-              className="h-28 w-auto select-none sm:h-36"
+              className="h-36 w-auto select-none sm:h-52"
             />
           </div>
         </div>
@@ -72,7 +72,7 @@ export default function KidsPage() {
             <img
               src={kidsBoyNew}
               alt=""
-              className="absolute -right-2 -top-12 z-10 h-24 w-auto rotate-12 select-none opacity-90 transition-transform hover:scale-110 lg:-right-8 lg:-top-16 lg:h-32"
+              className="absolute -right-2 -top-12 z-10 h-32 w-auto rotate-12 select-none opacity-90 transition-transform hover:scale-110 lg:-right-8 lg:-top-20 lg:h-44"
             />
             <KidsDailyQuiz quiz={today?.quiz} />
           </div>
@@ -88,7 +88,7 @@ export default function KidsPage() {
               <img
                 src={kidsGroupNew}
                 alt=""
-                className="absolute right-0 top-0 -z-0 h-24 w-auto -translate-y-1/2 select-none opacity-20 brightness-110 grayscale sm:relative sm:top-auto sm:h-20 sm:translate-y-0 sm:opacity-100 sm:grayscale-0 md:h-24"
+                className="absolute right-0 top-0 -z-0 h-32 w-auto -translate-y-1/2 select-none opacity-20 brightness-110 grayscale sm:relative sm:top-auto sm:h-28 sm:translate-y-0 sm:opacity-100 sm:grayscale-0 md:h-36"
               />
             </header>
 
