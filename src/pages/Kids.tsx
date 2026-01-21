@@ -25,13 +25,13 @@ export default function KidsPage() {
               src={kidsMascotes}
               alt="Mascotes da Área Kids"
               loading="lazy"
-              className="h-28 w-auto select-none"
+              className="h-28 w-auto select-none mix-blend-multiply"
             />
             <img
               src={kidsMascote}
               alt="Mascote da Área Kids"
               loading="lazy"
-              className="h-32 w-auto select-none"
+              className="h-32 w-auto select-none mix-blend-multiply"
             />
           </div>
         </div>
