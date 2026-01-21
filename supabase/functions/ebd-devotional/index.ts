@@ -65,7 +65,21 @@ serve(async (req) => {
     const system =
       "Você é um redator cristão evangélico e cria devocionais curtos, bíblicos e pastorais para uma igreja local. Escreva em português do Brasil.";
 
-    const user = `Crie o devocional do dia (${day}).\n\nRegras:\n- Retorne APENAS JSON válido (sem markdown).\n- Campos: title (string), bible_reference (string), body (string).\n- body: 900 a 1400 caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).\n- Evite mencionar que foi gerado por IA.`;
+    const themes = [
+      "Salmos: Louvor e Adoração",
+      "Provérbios: Sabedoria para o dia a dia",
+      "Evangelhos: Ensinamentos de Jesus",
+      "Cartas de Paulo: Vida Cristã e Graça",
+      "Antigo Testamento: Históricas de Fé (Gênesis, Êxodo, Josué, etc)",
+      "Profetas: Esperança e Consolo",
+      "Novo Testamento: Cartas Gerais (Tiago, Pedro, João)",
+      "Esperança e Encorajamento em tempos difíceis",
+      "Família e Relacionamentos à luz da Bíblia",
+      "Fé e Oração na prática"
+    ];
+    const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+
+    const user = `Crie o devocional do dia (${day}).\n\nContexto: O tema ou foco bíblico de hoje deve ser sobre: "${randomTheme}".\n\nRegras:\n- Retorne APENAS JSON válido (sem markdown).\n- Campos: title (string), bible_reference (string), body (string).\n- body: 900 a 1400 caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).\n- Evite mencionar que foi gerado por IA.\n- Seja criativo e evite repetições de dias anteriores.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

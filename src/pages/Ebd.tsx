@@ -19,7 +19,14 @@ export default function EbdPage() {
       <section className="mt-8">
         <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle className="font-display">Devocional de hoje</CardTitle>
+            <CardTitle className="flex items-center justify-between font-display">
+              <span>Devocional de hoje</span>
+              {today && (
+                <span className="text-sm font-normal text-muted-foreground">
+                  {today.day.split("-").reverse().join("/")}
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-left">
             {isLoading && <div className="text-sm text-muted-foreground">Carregando…</div>}
@@ -38,24 +45,6 @@ export default function EbdPage() {
             {!isLoading && !today && <div className="text-sm text-muted-foreground">Ainda não há devocional de hoje.</div>}
           </CardContent>
         </Card>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="font-display text-2xl">Últimos devocionais</h2>
-        <div className="mt-4 grid gap-3">
-          {(list ?? []).map((d) => (
-            <div key={d.id} className="rounded-2xl border bg-card p-4 text-left">
-              <div className="text-xs text-muted-foreground">{d.day}</div>
-              <div className="mt-1 font-medium">{d.title}</div>
-              {d.bible_reference && <div className="mt-1 text-sm text-muted-foreground">{d.bible_reference}</div>}
-            </div>
-          ))}
-          {(!list || list.length === 0) && (
-            <div className="rounded-2xl border bg-card p-4 text-left text-sm text-muted-foreground">
-              Nenhum devocional anterior ainda.
-            </div>
-          )}
-        </div>
       </section>
     </SiteLayout>
   );
