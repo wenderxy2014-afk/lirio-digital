@@ -45,11 +45,11 @@ export function useEbdDevotionalsList(limit = 30) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ebd_devotionals")
-        .select("id,day,title,bible_reference,created_at")
+        .select("id,day,title,body,bible_reference,created_at")
         .order("day", { ascending: false })
         .limit(limit);
       if (error) throw error;
-      return (data ?? []) as unknown as Array<Pick<EbdDevotional, "id" | "day" | "title" | "bible_reference" | "created_at">>;
+      return (data ?? []) as unknown as Array<EbdDevotional>;
     },
   });
 }

@@ -16,7 +16,7 @@ export default function EbdPage() {
   return (
     <SiteLayout>
       <header className="text-left">
-        <h1 className="font-display text-3xl">EBD</h1>
+        <h1 className="font-display text-3xl">Ebd</h1>
         <p className="mt-2 text-muted-foreground">
           Estudos e devocionais diários. Todo dia um novo devocional é preparado automaticamente.
         </p>

@@ -7,7 +7,7 @@ import { MemberAuthDialog } from "./MemberAuthDialog";
 const nav = [
   { to: "/", label: "Início" },
   { to: "/cultos", label: "Cultos & Eventos" },
-  { to: "/ebd", label: "EBD" },
+  { to: "/ebd", label: "Ebd" },
   { to: "/celulas", label: "Células" },
   { to: "/missoes", label: "Missões" },
   { to: "/kids", label: "Kids" },

@@ -3,8 +3,8 @@ import { KidsDailyQuiz } from "@/components/kids/KidsDailyQuiz";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useKids, useKidsDailyList, useKidsDailyToday } from "@/data/queries";
 
-import kidsMascote from "@/assets/kids-mascote.png";
-import kidsMascotes from "@/assets/kids-mascotes.png";
+import kidsBoyNew from "@/assets/kids-boy-new.png";
+import kidsGroupNew from "@/assets/kids-group-new.png";
 
 export default function KidsPage() {
   const { data: today, isLoading: isTodayLoading, error: todayError } = useKidsDailyToday();
@@ -15,23 +15,23 @@ export default function KidsPage() {
     <SiteLayout>
       <header className="text-left">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
+          <div className="relative z-10">
             <h1 className="font-display text-3xl">Área Kids</h1>
             <p className="mt-2 text-muted-foreground">Lição do dia, atividades e joguinhos bíblicos (7–10 anos).</p>
           </div>
 
-          <div className="flex items-end gap-4">
+          <div className="flex items-end gap-2 pr-4">
             <img
-              src={kidsMascotes}
-              alt="Mascotes da Área Kids"
+              src={kidsGroupNew}
+              alt="Turma Kids"
               loading="lazy"
-              className="h-28 w-auto select-none mix-blend-multiply"
+              className="h-24 w-auto select-none sm:h-32"
             />
             <img
-              src={kidsMascote}
-              alt="Mascote da Área Kids"
+              src={kidsBoyNew}
+              alt="Mascote Kids"
               loading="lazy"
-              className="h-32 w-auto select-none mix-blend-multiply"
+              className="h-28 w-auto select-none sm:h-36"
             />
           </div>
         </div>
@@ -67,14 +67,29 @@ export default function KidsPage() {
             </CardContent>
           </Card>
 
-          <div className="mt-6">
+          <div className="relative mt-8">
+            {/* Decoração duplicada: Menino pulando perto do Quiz */}
+            <img
+              src={kidsBoyNew}
+              alt=""
+              className="absolute -right-2 -top-12 z-10 h-24 w-auto rotate-12 select-none opacity-90 transition-transform hover:scale-110 lg:-right-8 lg:-top-16 lg:h-32"
+            />
             <KidsDailyQuiz quiz={today?.quiz} />
           </div>
 
           <section className="mt-10">
-            <header className="text-left">
-              <h2 className="font-display text-2xl">Materiais extras</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Vídeos e downloads (conteúdo fixo).</p>
+            <header className="relative flex items-end justify-between text-left">
+              <div className="relative z-10">
+                <h2 className="font-display text-2xl">Materiais extras</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Vídeos e downloads (conteúdo fixo).</p>
+              </div>
+
+              {/* Decoração duplicada: Grupo observando os materiais */}
+              <img
+                src={kidsGroupNew}
+                alt=""
+                className="absolute right-0 top-0 -z-0 h-24 w-auto -translate-y-1/2 select-none opacity-20 brightness-110 grayscale sm:relative sm:top-auto sm:h-20 sm:translate-y-0 sm:opacity-100 sm:grayscale-0 md:h-24"
+              />
             </header>
 
             <div className="mt-4 grid gap-6 md:grid-cols-2">
