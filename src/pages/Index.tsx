@@ -278,7 +278,7 @@ const Index = () => {
                     src={banner.src}
                     alt={banner.alt}
                     loading="lazy"
-                    className="w-full object-cover"
+                    className="h-[300px] w-full object-cover md:h-[400px]"
                   />
                 </div>
               </CarouselItem>

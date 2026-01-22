@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import zapImg from "@/assets/zap.png";
+import zapImg from "@/assets/zap-new.png";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -32,20 +32,31 @@ export function WhatsAppFloatingChat() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="group fixed bottom-6 right-6 z-50"
+          className="group fixed bottom-6 right-6 z-50 flex flex-col items-center"
           aria-label="Abrir chat via WhatsApp"
           title="WhatsApp"
         >
-          <span className="absolute inset-0 -z-10 rounded-full bg-primary/25 blur-xl transition-opacity group-hover:opacity-80" />
-          <span className="absolute -inset-1 -z-10 rounded-full bg-primary/15 animate-[pulse_2.2s_ease-in-out_infinite]" />
-          <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border bg-background/60 shadow-glow backdrop-blur transition-transform group-hover:scale-[1.03] active:scale-[0.98]">
-            <img
-              src={zapImg}
-              alt="WhatsApp"
-              className="h-8 w-8"
-              loading="lazy"
-            />
-          </span>
+          {/* Label "Fale Conosco" */}
+          <div className="absolute bottom-full mb-3 whitespace-nowrap rounded-lg bg-white px-3 py-1.5 text-sm font-bold text-emerald-600 shadow-xl transition-all hover:scale-105">
+            Fale Conosco
+            <div className="absolute -bottom-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 bg-white"></div>
+          </div>
+
+          {/* Button Container with Pulse */}
+          <div className="relative flex items-center justify-center">
+            {/* Pulse Ring */}
+            <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-green-500/60 opacity-75 duration-1000" />
+
+            {/* Main Button Image */}
+            <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-white bg-[#25D366] shadow-2xl transition-transform hover:scale-110">
+              <img
+                src={zapImg}
+                alt="WhatsApp"
+                className="h-full w-full object-cover p-0"
+                loading="lazy"
+              />
+            </div>
+          </div>
         </button>
       </DialogTrigger>
 
