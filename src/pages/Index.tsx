@@ -273,12 +273,12 @@ const Index = () => {
               { src: bannerCeia, alt: "A Ceia do Senhor" },
             ].map((banner, index) => (
               <CarouselItem key={index}>
-                <div className="relative overflow-hidden rounded-3xl border shadow-lift">
+                <div className="relative overflow-hidden rounded-3xl border shadow-lift h-[300px] md:h-[400px] bg-zinc-900">
                   <img
                     src={banner.src}
                     alt={banner.alt}
                     loading="lazy"
-                    className="h-[300px] w-full object-cover md:h-[400px]"
+                    className="h-full w-full object-contain"
                   />
                 </div>
               </CarouselItem>
