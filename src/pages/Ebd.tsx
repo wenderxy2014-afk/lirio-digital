@@ -9,21 +9,38 @@ import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { MemberAuthDialog } from "@/components/site/MemberAuthDialog";
 
 export default function EbdPage() {
   const { data: today, isLoading } = useEbdDevotionalToday();
   const { data: listData } = useEbdDevotionalsList(10);
-  const { roles } = useAuth();
+  const { roles, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [cleaning, setCleaning] = useState(false);
 
   const canManage = hasAnyRole(roles, ["admin", "editor"]);
 
-  // Filter out today's devotional from the list to avoid duplication
-  const pastList = listData?.filter((d) => d.id !== today?.id).slice(0, 7);
+  // Filter out today's devotional AND duplicates by title
+  const pastList = listData?.reduce((acc: any[], current) => {
+    const isToday = current.id === today?.id;
+    const isDuplicate = acc.some(item => item.title === current.title);
+    if (!isToday && !isDuplicate) {
+      acc.push(current);
+    }
+    return acc;
+  }, []).slice(0, 7);
 
   const handleCleanHistory = async () => {
+    if (!user) {
+      toast({
+        title: "Acesso Negado",
+        description: "Você precisa estar logado como administrador para realizar esta ação.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!confirm("Isso apagará TODO o histórico de devocionais (inclusive o de hoje) para gerar um novo do zero. Isso resolverá as repetições. Continuar?")) return;
 
     setCleaning(true);
@@ -32,19 +49,25 @@ export default function EbdPage() {
       const { data, error } = await supabase
         .from("ebd_devotionals")
         .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000") // This deletes everything
+        .neq("id", "00000000-0000-0000-0000-000000000000")
         .select();
 
       if (error) throw error;
 
+      const count = data?.length ?? 0;
       toast({
         title: "Limpeza Completa!",
-        description: `Removidos ${data?.length ?? 0} registros. O sistema vai gerar um guia novo em instantes.`
+        description: `Removidos ${count} registros. O sistema vai gerar um guia novo em instantes.`
       });
 
       await queryClient.invalidateQueries({ queryKey: ["ebd"] });
     } catch (e: any) {
-      toast({ title: "Erro", description: "Certifique-se de estar logado como Admin. Se o erro persistir, tente novamente em 1 minuto.", variant: "destructive" });
+      console.error("Erro ao limpar:", e);
+      toast({
+        title: "Erro na Limpeza",
+        description: "Verifique sua conexão ou permissões de administrador.",
+        variant: "destructive"
+      });
     } finally {
       setCleaning(false);
     }
@@ -108,6 +131,17 @@ export default function EbdPage() {
           </div>
         )}
       </section>
+
+      {/* Hidden Admin Entry Link */}
+      {!user && (
+        <div className="mt-20 border-t pt-8 text-center opacity-20 hover:opacity-100 transition-opacity">
+          <MemberAuthDialog>
+            <button className="text-xs text-muted-foreground underline decoration-dotted">
+              Acesso Administrativo
+            </button>
+          </MemberAuthDialog>
+        </div>
+      )}
     </SiteLayout>
   );
 }

@@ -45,25 +45,24 @@ serve(async (req) => {
 
     const day = todayKeySP();
 
-    // 0) Optional: Clean history if requested (checks url, body and headers)
+    // 0) Optional: Clean history if requested (checks url and headers)
     const isCleanRequested =
-      req.url.includes("clean=true") ||
+      req.url.includes("clean=") ||
       req.headers.get("x-clean-history") === "true";
 
     console.log(`Request URL: ${req.url}`);
     console.log(`Is Clean Requested: ${isCleanRequested}`);
 
     if (isCleanRequested) {
-      console.log(`Cleaning devotionals before: ${day}`);
+      console.log("Cleaning ALL devotionals to force re-generation...");
       const { data: count, error: deleteError } = await admin
         .from("ebd_devotionals")
         .delete()
-        .lt("day", day)
+        .neq("id", "00000000-0000-0000-0000-000000000000")
         .select();
 
       if (deleteError) throw deleteError;
 
-      console.log(`Deleted ${count?.length ?? 0} records.`);
       return new Response(JSON.stringify({
         message: "History cleaned successfully.",
         deletedCount: count?.length ?? 0
