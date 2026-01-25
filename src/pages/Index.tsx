@@ -62,6 +62,31 @@ const Index = () => {
     { image_url: bannerCeia, alt_text: "A Ceia do Senhor", order: 4 },
   ];
 
+  // Map to resolve asset paths to actual imports
+  const assetMap: Record<string, string> = {
+    '/src/assets/banner-familia.png': bannerFamilia,
+    'banner-familia.png': bannerFamilia,
+    '/src/assets/banner-maturidade.png': bannerMaturidade,
+    'banner-maturidade.png': bannerMaturidade,
+    '/src/assets/banner-homens.png': bannerHomens,
+    'banner-homens.png': bannerHomens,
+    '/src/assets/banner-ceia.png': bannerCeia,
+    'banner-ceia.png': bannerCeia,
+  };
+
+  // Resolve image URLs (handle both asset paths and storage URLs)
+  const resolvedCarouselData = carouselData.map((slide: any) => {
+    const imageUrl = slide.image_url;
+    
+    // If it's a local asset path, resolve it from the map
+    if (imageUrl && assetMap[imageUrl]) {
+      return { ...slide, image_url: assetMap[imageUrl] };
+    }
+    
+    // If it's already a full URL (from Supabase Storage), use as-is
+    return slide;
+  });
+
   const textsData = (homeContent?.texts as any) || {
     next_steps_title: "Próximos passos",
     next_steps_description: "Ajuste textos oficiais, contatos e adicione imagens reais. O admin permite cadastrar conteúdo e moderar testemunhos.",
@@ -287,7 +312,7 @@ const Index = () => {
           className="w-full"
         >
           <CarouselContent>
-            {carouselData
+            {resolvedCarouselData
               .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
               .map((slide: any, index: number) => (
               <CarouselItem key={index}>
