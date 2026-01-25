@@ -45,6 +45,24 @@ serve(async (req) => {
 
     const day = todayKeySP();
 
+    // Parse request body for custom parameters
+    let customTheme = "";
+    let customBibleBook = "";
+    let customTone = "";
+    let customLength = 1200;
+    let forceNew = false;
+    
+    try {
+      const body = await req.json();
+      customTheme = body?.theme || "";
+      customBibleBook = body?.bible_book || "";
+      customTone = body?.tone || "";
+      customLength = body?.length || 1200;
+      forceNew = body?.force_new === true;
+    } catch {
+      // No body or invalid JSON, use defaults
+    }
+
     // 0) Optional: Clean history if requested (checks url and headers)
     const isCleanRequested =
       req.url.includes("clean=") ||
@@ -72,7 +90,8 @@ serve(async (req) => {
     }
 
     // 1) Read existing
-    {
+    // Skip if force_new is requested (user wants to generate with custom params)
+    if (!forceNew) {
       const { data, error } = await admin
         .from("ebd_devotionals")
         .select("id,day,title,body,bible_reference,created_at")
@@ -88,26 +107,9 @@ serve(async (req) => {
     }
 
     // 2) Generate devotional (internal)
-    // Fetch last 5 titles to avoid repetition
     const system =
       "Você é um redator cristão evangélico e cria devocionais curtos, bíblicos e pastorais para uma igreja local. Escreva em português do Brasil.";
 
-    // Parse request body for custom parameters
-    let customTheme = "";
-    let customBibleBook = "";
-    let customTone = "";
-    let customLength = 1200;
-    
-    try {
-      const body = await req.json();
-      customTheme = body?.theme || "";
-      customBibleBook = body?.bible_book || "";
-      customTone = body?.tone || "";
-      customLength = body?.length || 1200;
-    } catch {
-      // No body or invalid JSON, use defaults
-    }
-    
     // Generate theme prompt
     let themePrompt = "";
     if (customTheme) {

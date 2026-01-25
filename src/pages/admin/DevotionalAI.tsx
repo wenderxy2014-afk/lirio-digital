@@ -1,4 +1,4 @@
- import { useState } from "react";
+ import { useState, useEffect } from "react";
  import { SiteLayout } from "@/components/site/SiteLayout";
  import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
  import { 
@@ -14,9 +14,20 @@
  import { Label } from "@/components/ui/label";
  import { Textarea } from "@/components/ui/textarea";
  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
- import { Sparkles, Wand2, Calendar } from "lucide-react";
+ import { Sparkles, Wand2, Calendar, Trash2, Edit, History } from "lucide-react";
  import { useToast } from "@/hooks/use-toast";
  import { supabase } from "@/integrations/supabase/client";
+  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+  import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+  
+  type Devotional = {
+    id: string;
+    day: string;
+    title: string;
+    body: string;
+    bible_reference: string | null;
+    created_at: string;
+  };
  
  export default function DevotionalAIPage() {
    const [theme, setTheme] = useState("");
@@ -24,8 +35,33 @@
    const [tone, setTone] = useState("pastoral");
    const [loading, setLoading] = useState(false);
    const [result, setResult] = useState<any>(null);
+    const [history, setHistory] = useState<Devotional[]>([]);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState("");
+    const [editBody, setEditBody] = useState("");
+    const [editBibleRef, setEditBibleRef] = useState("");
    const { toast } = useToast();
  
+    useEffect(() => {
+      loadHistory();
+    }, []);
+
+    const loadHistory = async () => {
+      const { data, error } = await supabase
+        .from("ebd_devotionals")
+        .select("*")
+        .order("day", { ascending: false })
+        .limit(30);
+
+      if (error) {
+        console.error("Error loading history:", error);
+        return;
+      }
+
+      setHistory(data || []);
+    };
+
    const handleGenerate = async () => {
      if (!theme.trim()) {
        toast({
@@ -44,12 +80,14 @@
            bible_book: bibleBook || undefined,
            tone: tone,
            length: 1200,
+            force_new: true, // Force generation with custom params
          },
        });
  
        if (error) throw error;
  
        setResult(data);
+        loadHistory(); // Refresh history
        toast({
          title: "Sucesso!",
          description: "Devocional gerado com sucesso",
@@ -66,6 +104,77 @@
      }
    };
  
+    const handleEdit = (devotional: Devotional) => {
+      setEditingId(devotional.id);
+      setEditTitle(devotional.title);
+      setEditBody(devotional.body);
+      setEditBibleRef(devotional.bible_reference || "");
+    };
+
+    const handleSaveEdit = async () => {
+      if (!editingId) return;
+
+      try {
+        const { error } = await supabase
+          .from("ebd_devotionals")
+          .update({
+            title: editTitle,
+            body: editBody,
+            bible_reference: editBibleRef || null,
+          })
+          .eq("id", editingId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso!",
+          description: "Devocional atualizado",
+        });
+
+        setEditingId(null);
+        loadHistory();
+        if (result?.id === editingId) {
+          setResult({ ...result, title: editTitle, body: editBody, bible_reference: editBibleRef });
+        }
+      } catch (error: any) {
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+
+    const handleDelete = async () => {
+      if (!deleteId) return;
+
+      try {
+        const { error } = await supabase
+          .from("ebd_devotionals")
+          .delete()
+          .eq("id", deleteId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso!",
+          description: "Devocional excluído",
+        });
+
+        setDeleteId(null);
+        loadHistory();
+        if (result?.id === deleteId) {
+          setResult(null);
+        }
+      } catch (error: any) {
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+
    const today = new Date().toLocaleDateString("pt-BR", {
      day: "2-digit",
      month: "long",
@@ -97,7 +206,20 @@
          </p>
        </header>
  
-       <div className="grid gap-6 lg:grid-cols-2">
+        <Tabs defaultValue="generate" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="generate">
+              <Wand2 className="h-4 w-4 mr-2" />
+              Gerar
+            </TabsTrigger>
+            <TabsTrigger value="history">
+              <History className="h-4 w-4 mr-2" />
+              Histórico
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="generate">
+            <div className="grid gap-6 lg:grid-cols-2">
          <div className="space-y-6">
            <Card>
              <CardHeader>
@@ -186,11 +308,21 @@
                    </div>
                  </div>
                  <div className="flex gap-2">
-                   <Button variant="outline" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleEdit(result)}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
                      Editar
                    </Button>
-                   <Button className="flex-1">
-                     Publicar
+                    <Button 
+                      variant="destructive" 
+                      className="flex-1"
+                      onClick={() => setDeleteId(result.id)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Excluir
                    </Button>
                  </div>
                </CardContent>
@@ -206,6 +338,124 @@
            )}
          </div>
        </div>
+          </TabsContent>
+
+          <TabsContent value="history">
+            <Card>
+              <CardHeader>
+                <CardTitle>Últimos 30 Devocionais</CardTitle>
+                <CardDescription>
+                  Histórico de devocionais gerados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {history.map((dev) => (
+                    <div key={dev.id} className="border rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="font-medium">{dev.title}</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(dev.day).toLocaleDateString("pt-BR")}
+                          </p>
+                          {dev.bible_reference && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {dev.bible_reference}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(dev)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteId(dev.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {history.length === 0 && (
+                    <p className="text-center text-muted-foreground py-8">
+                      Nenhum devocional gerado ainda
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Edit Dialog */}
+        {editingId && (
+          <AlertDialog open={!!editingId} onOpenChange={() => setEditingId(null)}>
+            <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Editar Devocional</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Faça as alterações necessárias no devocional
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-title">Título</Label>
+                  <Input
+                    id="edit-title"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-ref">Referência Bíblica</Label>
+                  <Input
+                    id="edit-ref"
+                    value={editBibleRef}
+                    onChange={(e) => setEditBibleRef(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-body">Conteúdo</Label>
+                  <Textarea
+                    id="edit-body"
+                    value={editBody}
+                    onChange={(e) => setEditBody(e.target.value)}
+                    rows={12}
+                  />
+                </div>
+              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleSaveEdit}>Salvar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir este devocional? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
      </SiteLayout>
    );
  }
