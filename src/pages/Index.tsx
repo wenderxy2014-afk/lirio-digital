@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowRight, Calendar, HeartHandshake, Users } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useCells, useEvents, useSettings } from "@/data/queries";
+import { useCells, useEvents, useSettings, useAllHomeContent } from "@/data/queries";
 import { useAuth } from "@/providers/AuthProvider";
 import { MemberAuthDialog } from "@/components/site/MemberAuthDialog";
 import { motion, useReducedMotion } from "framer-motion";
@@ -36,7 +36,41 @@ const Index = () => {
   const { data: settings } = useSettings();
   const { data: events } = useEvents();
   const { data: cells } = useCells();
+  const { data: homeContent } = useAllHomeContent();
   const { user } = useAuth();
+
+  // Extract content with fallbacks
+  const heroData = (homeContent?.hero as any) || {
+    welcome_text: "Bem-vindo(a)",
+    title: "Um lugar para pertencer, crescer e servir.",
+    subtitle: "Acompanhe nossos cultos e eventos, encontre uma célula perto de você e participe da vida da igreja.",
+    video_url: heroVideo,
+    show_audio_toggle: true,
+    show_live_stream: true,
+  };
+
+  const buttonsData = ((homeContent?.buttons as any)?.buttons) || [
+    { label: "Cultos & Eventos", url: "/cultos", variant: "gradient" },
+    { label: "Células", url: "/celulas", variant: "soft" },
+    { label: "Ofertas", url: "/ofertas", variant: "soft" },
+  ];
+
+  const carouselData = ((homeContent?.carousel as any)?.slides) || [
+    { image_url: bannerFamilia, alt_text: "Culto da Família", order: 1 },
+    { image_url: bannerMaturidade, alt_text: "Cultura da Maturidade", order: 2 },
+    { image_url: bannerHomens, alt_text: "Culto da Rede de Homens", order: 3 },
+    { image_url: bannerCeia, alt_text: "A Ceia do Senhor", order: 4 },
+  ];
+
+  const textsData = (homeContent?.texts as any) || {
+    next_steps_title: "Próximos passos",
+    next_steps_description: "Ajuste textos oficiais, contatos e adicione imagens reais. O admin permite cadastrar conteúdo e moderar testemunhos.",
+  };
+
+  // Resolve video URL (handle both paths and imports)
+  const videoUrl = typeof heroData.video_url === 'string' && heroData.video_url.startsWith('hero-bg')
+    ? heroVideo
+    : heroData.video_url;
 
   return (
     <SiteLayout>
@@ -51,37 +85,24 @@ const Index = () => {
         <div className="relative z-10 grid gap-10 md:grid-cols-2 md:items-center">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm/6 font-semibold">Bem-vindo(a)</p>
-              <HomeAudioToggle />
+              <p className="text-sm/6 font-semibold">{heroData.welcome_text}</p>
+              {heroData.show_audio_toggle && <HomeAudioToggle />}
             </div>
             <h1 className="mt-2 text-balance font-display text-4xl font-bold tracking-tight md:text-5xl">
-              Um lugar para pertencer, crescer e servir.
+              {heroData.title}
             </h1>
             <p className="mt-4 max-w-prose text-base/7 font-medium">
-              Acompanhe nossos cultos e eventos, encontre uma célula perto de você e participe da vida da igreja.
+              {heroData.subtitle}
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild variant="gradient" size="xl">
-                <NavLink to="/cultos">
-                  Cultos & Eventos <ArrowRight />
-                </NavLink>
-              </Button>
-              <Button asChild variant="soft" size="xl">
-                <NavLink to="/celulas">
-                  Células <Users />
-                </NavLink>
-              </Button>
-              <Button asChild variant="soft" size="xl">
-                <NavLink to="/ofertas">
-                  Ofertas <HeartHandshake />
-                </NavLink>
-              </Button>
-              <Button asChild variant="soft" size="xl">
-                <NavLink to="/ofertas">
-                  Ofertas <HeartHandshake />
-                </NavLink>
-              </Button>
+              {buttonsData.map((button: any, index: number) => (
+                <Button key={index} asChild variant={button.variant as any} size="xl">
+                  <NavLink to={button.url}>
+                    {button.label}
+                  </NavLink>
+                </Button>
+              ))}
               {user ? (
                 <Button asChild variant="soft" size="xl">
                   <NavLink to="/membro">Área do Membro</NavLink>
@@ -95,7 +116,7 @@ const Index = () => {
               )}
             </div>
 
-            {settings?.live_stream_url && (
+            {heroData.show_live_stream && settings?.live_stream_url && (
               <div className="mt-6 overflow-hidden rounded-2xl bg-brand p-5 shadow-glow">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-base font-bold text-primary-foreground">
@@ -122,7 +143,7 @@ const Index = () => {
             <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-background/10 ring-1 ring-white/20">
               <video
                 className="absolute inset-0 h-full w-full object-cover"
-                src={heroVideo}
+                src={videoUrl}
                 autoPlay
                 muted
                 loop
@@ -245,9 +266,9 @@ const Index = () => {
           transition={{ duration: 0.35, ease: "easeOut" }}
           className="rounded-3xl border bg-card p-8 shadow-lift"
         >
-          <h2 className="font-display text-2xl">Próximos passos</h2>
+          <h2 className="font-display text-2xl">{textsData.next_steps_title}</h2>
           <p className="mt-2 text-muted-foreground">
-            Ajuste textos oficiais, contatos e adicione imagens reais. O admin permite cadastrar conteúdo e moderar testemunhos.
+            {textsData.next_steps_description}
           </p>
         </motion.div>
       </section>
@@ -266,17 +287,14 @@ const Index = () => {
           className="w-full"
         >
           <CarouselContent>
-            {[
-              { src: bannerFamilia, alt: "Culto da Família" },
-              { src: bannerMaturidade, alt: "Cultura da Maturidade" },
-              { src: bannerHomens, alt: "Culto da Rede de Homens" },
-              { src: bannerCeia, alt: "A Ceia do Senhor" },
-            ].map((banner, index) => (
+            {carouselData
+              .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+              .map((slide: any, index: number) => (
               <CarouselItem key={index}>
                 <div className="relative overflow-hidden rounded-3xl border shadow-lift h-[300px] md:h-[400px] bg-zinc-900">
                   <img
-                    src={banner.src}
-                    alt={banner.alt}
+                    src={slide.image_url}
+                    alt={slide.alt_text}
                     loading="lazy"
                     className="h-full w-full object-contain"
                   />
