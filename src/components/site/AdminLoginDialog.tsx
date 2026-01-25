@@ -31,13 +31,6 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
     const [resetEmail, setResetEmail] = useState("");
     const [checkingAdmin, setCheckingAdmin] = useState(false);
 
-    // Check if admin exists when dialog opens
-    useEffect(() => {
-        if (open) {
-            checkAdminExists();
-        }
-    }, [open]);
-
     const checkAdminExists = async () => {
         setCheckingAdmin(true);
         try {
@@ -50,12 +43,16 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
 
             if (!data?.adminExists) {
                 // No admin exists, redirect to setup
+                console.log("No admin found, redirecting to setup...");
                 toast({
                     title: "Configuração Inicial",
                     description: "Nenhum administrador encontrado. Redirecionando para configuração...",
                 });
-                setOpen(false);
-                navigate("/admin/setup");
+                // Close dialog and navigate after a short delay
+                setTimeout(() => {
+                    setOpen(false);
+                    navigate("/admin/setup");
+                }, 1500);
             }
         } catch (error) {
             console.error("Error checking for admin:", error);
@@ -63,6 +60,13 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
             setCheckingAdmin(false);
         }
     };
+
+    // Check if admin exists when dialog opens
+    useEffect(() => {
+        if (open) {
+            checkAdminExists();
+        }
+    }, [open]);
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
