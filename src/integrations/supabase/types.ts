@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_permissions: {
+        Row: {
+          can_delete: boolean | null
+          can_read: boolean | null
+          can_write: boolean | null
+          id: string
+          module: Database["public"]["Enums"]["permission_module"]
+          user_id: string
+        }
+        Insert: {
+          can_delete?: boolean | null
+          can_read?: boolean | null
+          can_write?: boolean | null
+          id?: string
+          module: Database["public"]["Enums"]["permission_module"]
+          user_id: string
+        }
+        Update: {
+          can_delete?: boolean | null
+          can_read?: boolean | null
+          can_write?: boolean | null
+          id?: string
+          module?: Database["public"]["Enums"]["permission_module"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          email: string
+          full_name: string | null
+          id: string
+          is_active: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cell_interest: {
         Row: {
           cell_id: string | null
@@ -244,6 +301,30 @@ export type Database = {
           starts_at?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      home_content: {
+        Row: {
+          content: Json
+          id: string
+          section: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          content: Json
+          id?: string
+          section: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          content?: Json
+          id?: string
+          section?: string
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -544,6 +625,19 @@ export type Database = {
       app_role: "admin" | "editor" | "member"
       mission_status: "active" | "completed"
       moderation_status: "pending" | "approved" | "rejected"
+      permission_module:
+        | "home_cms"
+        | "events"
+        | "cells"
+        | "devotionals"
+        | "studies"
+        | "missions"
+        | "departments"
+        | "kids"
+        | "testimonials"
+        | "ebd_daily"
+        | "settings"
+        | "users"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -674,6 +768,20 @@ export const Constants = {
       app_role: ["admin", "editor", "member"],
       mission_status: ["active", "completed"],
       moderation_status: ["pending", "approved", "rejected"],
+      permission_module: [
+        "home_cms",
+        "events",
+        "cells",
+        "devotionals",
+        "studies",
+        "missions",
+        "departments",
+        "kids",
+        "testimonials",
+        "ebd_daily",
+        "settings",
+        "users",
+      ],
     },
   },
 } as const

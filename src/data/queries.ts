@@ -36,6 +36,51 @@ export function useEvents() {
   });
 }
 
+export function useHomeContent(section: string) {
+  return useQuery({
+    queryKey: ["home_content", section],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("home_content")
+        .select("content")
+        .eq("section", section)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.content || null;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+}
+
+export function useAdminUsers() {
+  return useQuery({
+    queryKey: ["admin_users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_users")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useAdminPermissions(userId: string) {
+  return useQuery({
+    queryKey: ["admin_permissions", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_permissions")
+        .select("*")
+        .eq("user_id", userId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId,
+  });
+}
+
 export function useCells() {
   return useQuery({
     queryKey: ["cells"],
