@@ -73,65 +73,6 @@ export default function DevotionalAIPage() {
     }
   };
 
-    // ... inside return ...
-
-    // In result view:
-                  <div className="flex gap-2">
-                     <Button 
-                       variant="outline" 
-                       className="flex-1"
-                       onClick={() => handleEdit(result)}
-                     >
-                       <Edit className="mr-2 h-4 w-4" />
-                      Editar
-                    </Button>
-
-                    {/* Publish Button */}
-                    <Button 
-                       variant={result.is_published ? "secondary" : "default"} 
-                       className={`flex-1 ${result.is_published ? "text-muted-foreground" : "bg-green-600 hover:bg-green-700 text-white"}`}
-                       onClick={() => handleTogglePublish(result.id, result.is_published, true)}
-                     >
-                       <Sparkles className="mr-2 h-4 w-4" />
-                       {result.is_published ? "Ocultar" : "Publicar"}
-                    </Button>
-
-                     <Button 
-                       variant="ghost" 
-                       className="flex-1 text-destructive hover:bg-destructive/10"
-                       onClick={() => setDeleteId(result.id)}
-                     >
-                       <Trash2 className="mr-2 h-4 w-4" />
-                       Excluir
-                    </Button>
-                  </div>
-
-    // ... In history list:
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleTogglePublish(dev.id, dev.is_published)}
-                            title={dev.is_published ? "Ocultar" : "Publicar"}
-                            className={dev.is_published ? "text-green-600" : "text-muted-foreground"}
-                          >
-                             <Sparkles className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(dev)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setDeleteId(dev.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
 
   useEffect(() => {
     loadHistory();
