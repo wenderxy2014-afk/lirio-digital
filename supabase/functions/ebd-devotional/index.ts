@@ -100,6 +100,17 @@ serve(async (req) => {
     const system =
       "Você é um redator cristão evangélico e cria devocionais curtos, bíblicos e pastorais para uma igreja local. Escreva em português do Brasil.";
 
+    // 3) Check for manually provided theme in request body
+    let requestedTheme = null;
+    try {
+      if (req.method === "POST") {
+        const body = await req.clone().json().catch(() => ({}));
+        if (body?.theme) requestedTheme = body.theme;
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const themes = [
       "Salmos: Louvor e Adoração",
       "Provérbios: Sabedoria para o dia a dia",
@@ -112,9 +123,14 @@ serve(async (req) => {
       "Família e Relacionamentos à luz da Bíblia",
       "Fé e Oração na prática"
     ];
-    const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
-    const user = `Crie o devocional do dia (${day}).\n\nContexto: O tema ou foco bíblico de hoje deve ser sobre: "${randomTheme}".\n\nRegras:\n- Retorne APENAS JSON válido (sem markdown).\n- Campos: title (string), bible_reference (string), body (string).\n- body: 900 a 1400 caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).\n- Evite mencionar que foi gerado por IA.\n- Títulos BLOQUEADOS (NUNCA USE): [${excludedTitles}, "A Rocha que não se Abala"].\n- IMPORTANTE: Crie um título TOTALMENTE novo, poético e inspirador, diferente de qualquer um acima.`;
+    // Use requested theme OR random theme
+    const activeTheme = requestedTheme || themes[Math.floor(Math.random() * themes.length)];
+    const strictInstruction = requestedTheme
+      ? `ATENÇÃO: Você deve seguir RIGOROSAMENTE o tema solicitado: "${requestedTheme}". Não desvie do assunto.`
+      : `Contexto: O tema ou foco bíblico de hoje deve ser sobre: "${activeTheme}".`;
+
+    const user = `Crie o devocional do dia (${day}).\n\n${strictInstruction}\n\nRegras:\n- Retorne APENAS JSON válido (sem markdown).\n- Campos: title (string), bible_reference (string), body (string).\n- body: 900 a 1400 caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).\n- Evite mencionar que foi gerado por IA.\n- Títulos BLOQUEADOS (NUNCA USE): [${excludedTitles}, "A Rocha que não se Abala"].\n- IMPORTANTE: Crie um título TOTALMENTE novo, poético e inspirador, diferente de qualquer um acima.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

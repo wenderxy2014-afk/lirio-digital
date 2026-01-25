@@ -64,11 +64,24 @@ export function AdminTable({ table }: { table: TableName }) {
     }
   }, [table]);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+
   const openCreate = () => {
+    setEditingId(null);
     setDraft({});
     if (table === "events") setDraft({ starts_at: new Date().toISOString() });
     if (table === "missions") setDraft({ status: "active" });
     if (table === "testimonials") setDraft({ status: "pending" });
+    // Default published to true for supported tables
+    if (["events", "devotionals", "studies", "missions", "kids_contents"].includes(table)) {
+      setDraft(d => ({ ...d, is_published: true }));
+    }
+    setOpen(true);
+  };
+
+  const openEdit = (row: any) => {
+    setEditingId(row.id);
+    setDraft({ ...row }); // populate draft with existing data
     setOpen(true);
   };
 
@@ -76,12 +89,22 @@ export function AdminTable({ table }: { table: TableName }) {
     setLoading(true);
     try {
       const payload = { ...draft };
-      if (table === "events" && payload.starts_at && typeof payload.starts_at === "string") {
-        // keep ISO
+      // cleanup internal fields or joins if any
+      delete payload.id;
+      delete payload.created_at;
+      delete payload.updated_at;
+
+      let error;
+      if (editingId) {
+        const { error: updateError } = await supabase.from(table).update(payload).eq("id", editingId);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase.from(table).insert(payload as any);
+        error = insertError;
       }
-      const { error } = await supabase.from(table).insert(payload as any);
+
       if (error) throw error;
-      toast({ title: "Criado" });
+      toast({ title: editingId ? "Atualizado" : "Criado com sucesso" });
       setOpen(false);
       await refetch();
     } catch (e: any) {
@@ -103,6 +126,17 @@ export function AdminTable({ table }: { table: TableName }) {
     }
   };
 
+  const togglePublished = async (id: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase.from(table).update({ is_published: !currentStatus }).eq("id", id);
+      if (error) throw error;
+      toast({ title: !currentStatus ? "Publicado" : "Despublicado" });
+      await refetch();
+    } catch (e: any) {
+      toast({ title: "Erro", description: "Falha ao alterar status.", variant: "destructive" });
+    }
+  };
+
   const moderate = async (id: string, status: "approved" | "rejected") => {
     try {
       const { error } = await supabase.from("testimonials").update({ status }).eq("id", id);
@@ -114,34 +148,41 @@ export function AdminTable({ table }: { table: TableName }) {
     }
   };
 
+  // Check if table supports is_published
+  const supportPublish = ["events", "devotionals", "studies", "missions", "kids_contents"].includes(table);
+
   return (
     <Card>
       <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <CardTitle className="font-display">{table}</CardTitle>
+        <CardTitle className="font-display capitalize">{table.replace("_", " ")}</CardTitle>
         <div className="flex flex-col gap-2 md:flex-row md:items-center">
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar…" className="md:w-72" />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button variant="brand" onClick={openCreate}>Novo</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="font-display">Novo registro</DialogTitle>
+                <DialogTitle className="font-display">{editingId ? "Editar registro" : "Novo registro"}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4">
                 {fields.map((f) => (
                   <div key={f} className="grid gap-2">
-                    <Label>{f}</Label>
+                    <Label className="capitalize">{f.replace("_", " ")}</Label>
                     {f === "body" || f === "description" ? (
-                      <Textarea value={draft[f] ?? ""} onChange={(e) => setDraft((s) => ({ ...s, [f]: e.target.value }))} />
+                      <Textarea
+                        value={draft[f] ?? ""}
+                        onChange={(e) => setDraft((s) => ({ ...s, [f]: e.target.value }))}
+                        className="min-h-[150px]"
+                      />
                     ) : f === "status" && table === "missions" ? (
                       <Select value={draft[f] ?? "active"} onValueChange={(v) => setDraft((s) => ({ ...s, [f]: v }))}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="active">active</SelectItem>
-                          <SelectItem value="completed">completed</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : f === "status" && table === "testimonials" ? (
@@ -150,9 +191,9 @@ export function AdminTable({ table }: { table: TableName }) {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending">pending</SelectItem>
-                          <SelectItem value="approved">approved</SelectItem>
-                          <SelectItem value="rejected">rejected</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
@@ -160,6 +201,9 @@ export function AdminTable({ table }: { table: TableName }) {
                     )}
                   </div>
                 ))}
+
+                {/* Checkbox for is_published in modal? implicit */}
+
                 <Button variant="brand" onClick={() => void save()} disabled={loading}>
                   {loading ? "Salvando…" : "Salvar"}
                 </Button>
@@ -174,25 +218,50 @@ export function AdminTable({ table }: { table: TableName }) {
 
         <div className="mt-4 grid gap-3">
           {filtered.slice(0, 50).map((row: any) => (
-            <div key={row.id} className="rounded-2xl border bg-card p-4">
+            <div key={row.id} className="rounded-2xl border bg-card p-4 transition-all hover:shadow-sm">
               <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div className="min-w-0">
-                  <div className="font-medium">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 font-medium">
                     {row.title ?? row.name ?? "(sem título)"}
+                    {supportPublish && (
+                      <span className={`inline-flex h-2 w-2 rounded-full ${row.is_published ? 'bg-green-500' : 'bg-yellow-500'}`} title={row.is_published ? "Publicado" : "Rascunho"} />
+                    )}
                   </div>
                   <div className="mt-1 line-clamp-2 text-sm text-muted-foreground">{row.description ?? row.body ?? row.location ?? ""}</div>
                   {table === "testimonials" && (
-                    <div className="mt-2 text-xs text-muted-foreground">status: {row.status}</div>
+                    <div className="mt-2 text-xs text-muted-foreground capitalize">Status: {row.status}</div>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-2">
+
+                <div className="flex flex-wrap items-center gap-2">
                   {table === "testimonials" && row.status === "pending" ? (
                     <>
                       <Button variant="soft" size="sm" onClick={() => void moderate(row.id, "approved")}>Aprovar</Button>
                       <Button variant="outline" size="sm" onClick={() => void moderate(row.id, "rejected")}>Reprovar</Button>
                     </>
                   ) : null}
-                  <Button variant="outline" size="sm" onClick={() => void del(row.id)}>Excluir</Button>
+
+                  {/* Edit Button */}
+                  <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
+                    Editar
+                  </Button>
+
+                  {/* Publish Button (Toggle) */}
+                  {supportPublish && (
+                    <Button
+                      variant={row.is_published ? "secondary" : "default"}
+                      size="sm"
+                      onClick={() => void togglePublished(row.id, row.is_published)}
+                      className={row.is_published ? "text-muted-foreground" : "bg-green-600 hover:bg-green-700 text-white"}
+                    >
+                      {row.is_published ? "Ocultar" : "Publicar"}
+                    </Button>
+                  )}
+
+                  {/* Delete Button */}
+                  <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => void del(row.id)}>
+                    Excluir
+                  </Button>
                 </div>
               </div>
             </div>
@@ -200,7 +269,7 @@ export function AdminTable({ table }: { table: TableName }) {
         </div>
 
         <div className="mt-6 rounded-2xl bg-brand-soft p-4 text-xs text-muted-foreground">
-          Esta é a v1 do admin: criação e exclusão rápidas. Na próxima iteração, adicionamos editar e formulários completos por entidade.
+          Gerencie o conteúdo do site. Use o botão "Novo" para criar registros e os botões de ação para editar ou remover.
         </div>
       </CardContent>
     </Card>
