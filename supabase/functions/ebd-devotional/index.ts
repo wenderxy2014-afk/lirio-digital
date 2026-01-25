@@ -108,14 +108,14 @@ serve(async (req) => {
 
     // 2) Generate devotional (internal)
     const system =
-      "Você é um redator cristão evangélico e cria devocionais curtos, bíblicos e pastorais para uma igreja local. Escreva em português do Brasil.";
+      "Você é um redator cristão evangélico especializado em criar devocionais bíblicos e pastorais para uma igreja local. Você DEVE seguir rigorosamente o tema e tom especificados pelo usuário. Escreva em português do Brasil.";
 
     // Generate theme prompt
     let themePrompt = "";
     if (customTheme) {
-      themePrompt = `Tema de hoje: "${customTheme}".`;
+      themePrompt = `TEMA OBRIGATÓRIO: "${customTheme}". Você DEVE criar o devocional focado especificamente neste tema.`;
       if (customBibleBook) {
-        themePrompt += ` Use o livro bíblico: ${customBibleBook}.`;
+        themePrompt += ` OBRIGATÓRIO: Use passagens APENAS do livro bíblico: ${customBibleBook}.`;
       }
     } else {
       // Use random theme if no custom theme provided
@@ -148,15 +148,16 @@ serve(async (req) => {
 
     const user = `Crie o devocional do dia (${day}).
 
-Contexto: ${themePrompt}
+${themePrompt}
 
-Tom: ${toneText}.
+Tom OBRIGATÓRIO: ${toneText}. Mantenha este tom durante todo o texto.
 
 Regras:
 - Retorne APENAS JSON válido (sem markdown).
 - Campos: title (string), bible_reference (string), body (string).
 - body: aproximadamente ${customLength} caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).
-- Evite mencionar que foi gerado por IA.
+- O devocional deve refletir EXATAMENTE o tema especificado acima.
+- Nunca mencione que foi gerado por IA.
 - Títulos BLOQUEADOS (NUNCA USE): [${excludedTitles}, "A Rocha que não se Abala"].
 - IMPORTANTE: Crie um título TOTALMENTE novo, poético e inspirador, diferente de qualquer um acima.`;
 
@@ -172,7 +173,7 @@ Regras:
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-        temperature: 0.9,
+        temperature: 0.7,
       }),
     });
 
