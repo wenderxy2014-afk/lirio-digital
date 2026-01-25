@@ -137,16 +137,6 @@ export default function EbdPage() {
         )}
       </section>
 
-      {/* Hidden Admin Entry Link */}
-      {!user && (
-        <div className="mt-20 border-t pt-8 text-center opacity-20 hover:opacity-100 transition-opacity">
-          <MemberAuthDialog>
-            <button className="text-xs text-muted-foreground underline decoration-dotted">
-              Acesso Administrativo
-            </button>
-          </MemberAuthDialog>
-        </div>
-      )}
     </SiteLayout>
   );
 }
