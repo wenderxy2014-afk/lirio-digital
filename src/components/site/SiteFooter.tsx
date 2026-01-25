@@ -1,6 +1,6 @@
 import { Facebook, Instagram, MapPin, Phone, Clock, MessageCircle, ShieldCheck } from "lucide-react";
-import { NavLink } from "@/components/NavLink";
 import igrejaBg from "@/assets/igreja-bg.png";
+import { AdminLoginDialog } from "./AdminLoginDialog";
 
 export function SiteFooter() {
   return (
@@ -107,13 +107,12 @@ export function SiteFooter() {
           </div>
 
           <div className="mt-10 flex items-center justify-center border-t pt-6">
-            <NavLink
-              to="/auth"
-              className="inline-flex items-center gap-2 rounded-xl border bg-background/60 px-4 py-2 text-sm text-muted-foreground shadow-lift backdrop-blur transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <ShieldCheck className="h-4 w-4" />
-              <span className="font-medium">Administrador</span>
-            </NavLink>
+            <AdminLoginDialog>
+              <button className="inline-flex items-center gap-2 rounded-xl border bg-background/60 px-4 py-2 text-sm text-muted-foreground shadow-lift backdrop-blur transition-colors hover:bg-accent hover:text-foreground">
+                <ShieldCheck className="h-4 w-4" />
+                <span className="font-medium">Administrador</span>
+              </button>
+            </AdminLoginDialog>
           </div>
 
           <div className="mt-6 flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
