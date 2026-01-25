@@ -21,6 +21,27 @@ export function useSettings() {
   });
 }
 
+export function useAllHomeContent() {
+  return useQuery({
+    queryKey: ["home-content-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("home_content")
+        .select("*");
+      
+      if (error) throw error;
+      
+      const content: Record<string, any> = {};
+      data?.forEach((item) => {
+        content[item.section] = item.content;
+      });
+      
+      return content;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+}
+
 export function useEvents() {
   return useQuery({
     queryKey: ["events"],
@@ -33,6 +54,51 @@ export function useEvents() {
       if (error) throw error;
       return data ?? [];
     },
+  });
+}
+
+export function useHomeContent(section: string) {
+  return useQuery({
+    queryKey: ["home_content", section],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("home_content")
+        .select("content")
+        .eq("section", section)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.content || null;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+}
+
+export function useAdminUsers() {
+  return useQuery({
+    queryKey: ["admin_users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_users")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useAdminPermissions(userId: string) {
+  return useQuery({
+    queryKey: ["admin_permissions", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_permissions")
+        .select("*")
+        .eq("user_id", userId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!userId,
   });
 }
 

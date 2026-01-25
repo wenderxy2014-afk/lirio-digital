@@ -1,5 +1,11 @@
 project_id = "mlbcbxajwzeocrmijqqf"
 
+[functions.check-admin-exists]
+verify_jwt = false
+
+[functions.create-admin-user]
+verify_jwt = false
+
 [functions.ebd-devotional]
 verify_jwt = false
 

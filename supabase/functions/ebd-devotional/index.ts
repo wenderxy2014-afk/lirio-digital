@@ -45,6 +45,24 @@ serve(async (req) => {
 
     const day = todayKeySP();
 
+    // Parse request body for custom parameters
+    let customTheme = "";
+    let customBibleBook = "";
+    let customTone = "";
+    let customLength = 1200;
+    let forceNew = false;
+
+    try {
+      const body = await req.json();
+      customTheme = body?.theme || "";
+      customBibleBook = body?.bible_book || "";
+      customTone = body?.tone || "";
+      customLength = body?.length || 1200;
+      forceNew = body?.force_new === true;
+    } catch {
+      // No body or invalid JSON, use defaults
+    }
+
     // 0) Optional: Clean history if requested (checks url and headers)
     const isCleanRequested =
       req.url.includes("clean=") ||
@@ -72,7 +90,8 @@ serve(async (req) => {
     }
 
     // 1) Read existing
-    {
+    // Skip if force_new is requested (user wants to generate with custom params)
+    if (!forceNew) {
       const { data, error } = await admin
         .from("ebd_devotionals")
         .select("id,day,title,body,bible_reference,created_at")
@@ -88,7 +107,35 @@ serve(async (req) => {
     }
 
     // 2) Generate devotional (internal)
-    // Fetch last 5 titles to avoid repetition
+    const system =
+      "Você é um redator cristão evangélico especializado em criar devocionais bíblicos e pastorais para uma igreja local. Você DEVE seguir rigorosamente o tema e tom especificados pelo usuário. Escreva em português do Brasil.";
+
+    // Generate theme prompt
+    let themePrompt = "";
+    if (customTheme) {
+      themePrompt = `TEMA OBRIGATÓRIO: "${customTheme}". Você DEVE criar o devocional focado especificamente neste tema.`;
+      if (customBibleBook) {
+        themePrompt += ` OBRIGATÓRIO: Use passagens APENAS do livro bíblico: ${customBibleBook}.`;
+      }
+    } else {
+      // Use random theme if no custom theme provided
+      const themes = [
+        "Salmos: Louvor e Adoração",
+        "Provérbios: Sabedoria para o dia a dia",
+        "Evangelhos: Ensinamentos de Jesus",
+        "Cartas de Paulo: Vida Cristã e Graça",
+        "Antigo Testamento: Históricas de Fé (Gênesis, Êxodo, Josué, etc)",
+        "Profetas: Esperança e Consolo",
+        "Novo Testamento: Cartas Gerais (Tiago, Pedro, João)",
+        "Esperança e Encorajamento em tempos difíceis",
+        "Família e Relacionamentos à luz da Bíblia",
+        "Fé e Oração na prática"
+      ];
+      const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+      themePrompt = `O tema ou foco bíblico de hoje deve ser sobre: "${randomTheme}".`;
+    }
+
+    // Fetch past titles to avoid repetition
     const { data: pastTitles } = await admin
       .from("ebd_devotionals")
       .select("title")
@@ -97,40 +144,22 @@ serve(async (req) => {
 
     const excludedTitles = pastTitles?.map(t => t.title).join(", ") || "Nenhum ainda";
 
-    const system =
-      "Você é um redator cristão evangélico e cria devocionais curtos, bíblicos e pastorais para uma igreja local. Escreva em português do Brasil.";
+    const toneText = customTone || "Pastoral e encorajador";
 
-    // 3) Check for manually provided theme in request body
-    let requestedTheme = null;
-    try {
-      if (req.method === "POST") {
-        const body = await req.clone().json().catch(() => ({}));
-        if (body?.theme) requestedTheme = body.theme;
-      }
-    } catch (e) {
-      // ignore
-    }
+    const user = `Crie o devocional do dia (${day}).
 
-    const themes = [
-      "Salmos: Louvor e Adoração",
-      "Provérbios: Sabedoria para o dia a dia",
-      "Evangelhos: Ensinamentos de Jesus",
-      "Cartas de Paulo: Vida Cristã e Graça",
-      "Antigo Testamento: Históricas de Fé (Gênesis, Êxodo, Josué, etc)",
-      "Profetas: Esperança e Consolo",
-      "Novo Testamento: Cartas Gerais (Tiago, Pedro, João)",
-      "Esperança e Encorajamento em tempos difíceis",
-      "Família e Relacionamentos à luz da Bíblia",
-      "Fé e Oração na prática"
-    ];
+${themePrompt}
 
-    // Use requested theme OR random theme
-    const activeTheme = requestedTheme || themes[Math.floor(Math.random() * themes.length)];
-    const strictInstruction = requestedTheme
-      ? `ATENÇÃO: Você deve seguir RIGOROSAMENTE o tema solicitado: "${requestedTheme}". Não desvie do assunto.`
-      : `Contexto: O tema ou foco bíblico de hoje deve ser sobre: "${activeTheme}".`;
+Tom OBRIGATÓRIO: ${toneText}. Mantenha este tom durante todo o texto.
 
-    const user = `Crie o devocional do dia (${day}).\n\n${strictInstruction}\n\nRegras:\n- Retorne APENAS JSON válido (sem markdown).\n- Campos: title (string), bible_reference (string), body (string).\n- body: 900 a 1400 caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).\n- Evite mencionar que foi gerado por IA.\n- Títulos BLOQUEADOS (NUNCA USE): [${excludedTitles}, "A Rocha que não se Abala"].\n- IMPORTANTE: Crie um título TOTALMENTE novo, poético e inspirador, diferente de qualquer um acima.`;
+Regras:
+- Retorne APENAS JSON válido (sem markdown).
+- Campos: title (string), bible_reference (string), body (string).
+- body: aproximadamente ${customLength} caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).
+- O devocional deve refletir EXATAMENTE o tema especificado acima.
+- Nunca mencione que foi gerado por IA.
+- Títulos BLOQUEADOS (NUNCA USE): [${excludedTitles}, "A Rocha que não se Abala"].
+- IMPORTANTE: Crie um título TOTALMENTE novo, poético e inspirador, diferente de qualquer um acima.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -144,7 +173,7 @@ serve(async (req) => {
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-        temperature: 0.9,
+        temperature: 0.7,
       }),
     });
 

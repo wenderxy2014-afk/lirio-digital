@@ -3,8 +3,6 @@ import { Button } from "@/components/ui/button";
 import logo from "@/assets/iblv-logo.png";
 import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
 import { MemberAuthDialog } from "./MemberAuthDialog";
-import { AdminLoginDialog } from "./AdminLoginDialog";
-import { ShieldCheck } from "lucide-react";
 
 const nav = [
   { to: "/", label: "Início" },
@@ -52,16 +50,6 @@ export function SiteHeader() {
             <Button asChild variant="soft" size="sm">
               <NavLink to="/admin">Painel</NavLink>
             </Button>
-          )}
-
-          {/* Botão de Administrador (Login) - Visível apenas se não estiver logado como admin */}
-          {!canAdmin && !user && (
-            <AdminLoginDialog>
-              <Button variant="ghost" size="sm" className="hidden lg:inline-flex text-muted-foreground hover:text-foreground">
-                <ShieldCheck className="mr-2 h-4 w-4" />
-                Administrador
-              </Button>
-            </AdminLoginDialog>
           )}
 
           {user ? (
