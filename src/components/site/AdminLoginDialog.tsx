@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ShieldCheck, Loader2, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import logo from "@/assets/iblv-logo.png";
 
 interface AdminLoginDialogProps {
     children: React.ReactNode;
@@ -230,21 +231,23 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent className="sm:max-w-[400px]">
+            <DialogContent className="sm:max-w-[420px] overflow-hidden">
+                {/* Background Logo */}
+                <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
+                    <img src={logo} alt="" className="w-64 h-64 grayscale" />
+                </div>
+
+                <div className="relative z-10">
                 <DialogHeader>
-                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                        {viewMode === "setup" ? (
-                            <Shield className="h-6 w-6 text-primary" />
-                        ) : (
-                            <ShieldCheck className="h-6 w-6 text-primary" />
-                        )}
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand/10 shadow-inner">
+                        <img src={logo} alt="Logo IBLV" className="h-10 w-10" />
                     </div>
-                    <DialogTitle className="text-center font-display text-xl">
+                    <DialogTitle className="text-center font-display text-2xl">
                         {viewMode === "login" && "Acesso Administrativo"}
                         {viewMode === "forgot-password" && "Recuperar Senha"}
                         {viewMode === "setup" && "Configuração Inicial"}
                     </DialogTitle>
-                    <DialogDescription className="text-center">
+                    <DialogDescription className="text-center text-base">
                         {viewMode === "login" && "Entre com suas credenciais de gestão."}
                         {viewMode === "forgot-password" && "Digite seu e-mail para receber o link de recuperação."}
                         {viewMode === "setup" && "Crie o primeiro administrador do sistema"}
@@ -252,12 +255,12 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                 </DialogHeader>
 
                 {checkingAdmin ? (
-                    <div className="py-8 flex flex-col items-center justify-center gap-4">
+                    <div className="py-12 flex flex-col items-center justify-center gap-4">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         <p className="text-sm text-muted-foreground">Verificando sistema...</p>
                     </div>
                 ) : viewMode === "login" ? (
-                    <form onSubmit={submit} className="space-y-4 pt-2">
+                    <form onSubmit={submit} className="space-y-5 mt-6">
                     <div className="space-y-2">
                         <Label htmlFor="admin-email">E-mail</Label>
                         <Input
@@ -267,6 +270,7 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                             onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
                             placeholder="admin@igreja.com"
                             required
+                            className="h-11"
                         />
                     </div>
                     <div className="space-y-2">
@@ -278,10 +282,11 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                             onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
                             placeholder="••••••••"
                             required
+                            className="h-11"
                         />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <Button type="submit" size="lg" className="w-full h-12 shadow-glow-sm hover:translate-y-[-2px] transition-all duration-300" disabled={loading}>
                             {loading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -302,7 +307,7 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                         </Button>
                 </form>
                 ) : viewMode === "forgot-password" ? (
-                    <form onSubmit={handleForgotPassword} className="space-y-4 pt-2">
+                    <form onSubmit={handleForgotPassword} className="space-y-5 mt-6">
                         <div className="space-y-2">
                             <Label htmlFor="reset-email">E-mail</Label>
                             <Input
@@ -312,10 +317,11 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                                 onChange={(e) => setResetEmail(e.target.value)}
                                 placeholder="seu@email.com"
                                 required
+                                className="h-11"
                             />
                         </div>
 
-                        <Button type="submit" className="w-full" disabled={loading}>
+                        <Button type="submit" size="lg" className="w-full h-12 shadow-glow-sm hover:translate-y-[-2px] transition-all duration-300" disabled={loading}>
                             {loading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -336,7 +342,7 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                         </Button>
                     </form>
                 ) : (
-                    <form onSubmit={handleSetup} className="space-y-4 pt-2">
+                    <form onSubmit={handleSetup} className="space-y-5 mt-6">
                         <div className="space-y-2">
                             <Label htmlFor="setup-fullName">Nome Completo</Label>
                             <Input
@@ -345,6 +351,7 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                                 value={setupForm.fullName}
                                 onChange={(e) => setSetupForm(s => ({ ...s, fullName: e.target.value }))}
                                 placeholder="Seu nome completo"
+                                className="h-11"
                             />
                         </div>
 
@@ -357,6 +364,7 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                                 onChange={(e) => setSetupForm(s => ({ ...s, email: e.target.value }))}
                                 placeholder="admin@igreja.com"
                                 required
+                                className="h-11"
                             />
                         </div>
 
@@ -370,6 +378,7 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                                 placeholder="••••••••"
                                 required
                                 minLength={6}
+                                className="h-11"
                             />
                         </div>
 
@@ -383,10 +392,11 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                                 placeholder="••••••••"
                                 required
                                 minLength={6}
+                                className="h-11"
                             />
                         </div>
 
-                        <Button type="submit" className="w-full" disabled={loading}>
+                        <Button type="submit" size="lg" className="w-full h-12 shadow-glow-sm hover:translate-y-[-2px] transition-all duration-300" disabled={loading}>
                             {loading ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -398,6 +408,13 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                         </Button>
                     </form>
                 )}
+
+                {viewMode !== "setup" && (
+                    <p className="mt-6 text-center text-xs text-muted-foreground">
+                        Acesso restrito para gestão administrativa da igreja.
+                    </p>
+                )}
+                </div>
             </DialogContent>
         </Dialog>
     );
