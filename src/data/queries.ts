@@ -21,6 +21,27 @@ export function useSettings() {
   });
 }
 
+export function useAllHomeContent() {
+  return useQuery({
+    queryKey: ["home-content-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("home_content")
+        .select("*");
+      
+      if (error) throw error;
+      
+      const content: Record<string, any> = {};
+      data?.forEach((item) => {
+        content[item.section] = item.content;
+      });
+      
+      return content;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+}
+
 export function useEvents() {
   return useQuery({
     queryKey: ["events"],
