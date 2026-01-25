@@ -28,13 +28,23 @@ export default function EbdPage() {
 
     setCleaning(true);
     try {
-      const { data, error } = await supabase.functions.invoke("ebd-devotional", {
-        headers: { "x-clean-history": "true" }
-      });
+      const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+
+      // Delete directly from DB if user is admin (RLS allows this)
+      const { data, error } = await supabase
+        .from("ebd_devotionals")
+        .delete()
+        .lt("day", today)
+        .select();
 
       if (error) throw error;
 
-      toast({ title: "Histórico limpo!", description: "Os devocionais antigos foram removidos." });
+      const count = data?.length ?? 0;
+      toast({
+        title: "Histórico limpo!",
+        description: `${count} devocionais antigos foram removidos com sucesso.`
+      });
+
       queryClient.invalidateQueries({ queryKey: ["ebd"] });
     } catch (e: any) {
       toast({ title: "Erro ao limpar", description: e.message, variant: "destructive" });
