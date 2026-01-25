@@ -4,22 +4,67 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useEbdDevotionalToday, useEbdDevotionalsList } from "@/data/ebd";
 import { useState } from "react";
-import { Minus, Plus, Type, ChevronDown, ChevronUp } from "lucide-react";
+import { Minus, Plus, Type, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function EbdPage() {
   const { data: today, isLoading } = useEbdDevotionalToday();
   const { data: listData } = useEbdDevotionalsList(10);
+  const { roles } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [cleaning, setCleaning] = useState(false);
+
+  const canManage = hasAnyRole(roles, ["admin"]);
 
   // Filter out today's devotional from the list to avoid duplication
   const pastList = listData?.filter((d) => d.id !== today?.id).slice(0, 7);
 
+  const handleCleanHistory = async () => {
+    if (!confirm("Deseja realmente apagar todo o histórico antigo e manter apenas o de hoje?")) return;
+
+    setCleaning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ebd-devotional", {
+        body: { cleanHistory: true },
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Histórico limpo!", description: "Os devocionais antigos foram removidos." });
+      queryClient.invalidateQueries({ queryKey: ["ebd"] });
+    } catch (e: any) {
+      toast({ title: "Erro ao limpar", description: e.message, variant: "destructive" });
+    } finally {
+      setCleaning(false);
+    }
+  };
+
   return (
     <SiteLayout>
-      <header className="text-left">
-        <h1 className="font-display text-3xl">Ebd</h1>
-        <p className="mt-2 text-muted-foreground">
-          Estudos e devocionais diários. Todo dia um novo devocional é preparado automaticamente.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-4 text-left">
+        <div>
+          <h1 className="font-display text-3xl">Ebd</h1>
+          <p className="mt-2 text-muted-foreground">
+            Estudos e devocionais diários. Todo dia um novo devocional é preparado automaticamente.
+          </p>
+        </div>
+
+        {canManage && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10"
+            onClick={handleCleanHistory}
+            disabled={cleaning}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {cleaning ? "Limpando..." : "Limpar Histórico Antigo"}
+          </Button>
+        )}
       </header>
 
       <section className="mt-8 space-y-6">

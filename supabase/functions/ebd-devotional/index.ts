@@ -45,6 +45,21 @@ serve(async (req) => {
 
     const day = todayKeySP();
 
+    // 0) Optional: Clean history if requested
+    const { cleanHistory } = await req.json().catch(() => ({}));
+    if (cleanHistory) {
+      console.log("Cleaning history, keeping only from today onwards...");
+      const { error: deleteError } = await admin
+        .from("ebd_devotionals")
+        .delete()
+        .lt("day", day);
+
+      if (deleteError) throw deleteError;
+      return new Response(JSON.stringify({ message: "History cleaned successfully." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // 1) Read existing
     {
       const { data, error } = await admin
@@ -62,6 +77,15 @@ serve(async (req) => {
     }
 
     // 2) Generate devotional (internal)
+    // Fetch last 5 titles to avoid repetition
+    const { data: pastTitles } = await admin
+      .from("ebd_devotionals")
+      .select("title")
+      .order("day", { ascending: false })
+      .limit(5);
+
+    const excludedTitles = pastTitles?.map(t => t.title).join(", ") || "Nenhum ainda";
+
     const system =
       "Você é um redator cristão evangélico e cria devocionais curtos, bíblicos e pastorais para uma igreja local. Escreva em português do Brasil.";
 
@@ -79,7 +103,7 @@ serve(async (req) => {
     ];
     const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
-    const user = `Crie o devocional do dia (${day}).\n\nContexto: O tema ou foco bíblico de hoje deve ser sobre: "${randomTheme}".\n\nRegras:\n- Retorne APENAS JSON válido (sem markdown).\n- Campos: title (string), bible_reference (string), body (string).\n- body: 900 a 1400 caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).\n- Evite mencionar que foi gerado por IA.\n- Seja criativo e evite repetições de dias anteriores.`;
+    const user = `Crie o devocional do dia (${day}).\n\nContexto: O tema ou foco bíblico de hoje deve ser sobre: "${randomTheme}".\n\nRegras:\n- Retorne APENAS JSON válido (sem markdown).\n- Campos: title (string), bible_reference (string), body (string).\n- body: 900 a 1400 caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).\n- Evite mencionar que foi gerado por IA.\n- Títulos que você JÁ usou e DEVE EVITAR: [${excludedTitles}].\n- Crie um título NOVO e CRIATIVO, diferente dos anteriores.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
