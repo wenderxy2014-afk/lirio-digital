@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,127 +7,73 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { authSchema } from "@/lib/validation";
-import { useNavigate } from "react-router-dom";
+import logo from "@/assets/iblv-logo.png";
+import { LogIn, UserPlus } from "lucide-react";
 
 interface MemberAuthDialogProps {
   children: React.ReactNode;
 }
 
 export function MemberAuthDialog({ children }: MemberAuthDialogProps) {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-
-  const submit = async () => {
-    const parsed = authSchema.safeParse(form);
-    if (!parsed.success) {
-      toast({ title: "Confira os campos", description: parsed.error.issues[0]?.message });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (mode === "signup") {
-        const redirectUrl = `${window.location.origin}/`;
-        const { error } = await supabase.auth.signUp({
-          email: parsed.data.email,
-          password: parsed.data.password,
-          options: { emailRedirectTo: redirectUrl },
-        });
-        if (error) throw error;
-        toast({
-          title: "Cadastro enviado",
-          description: "Se necessário, verifique seu e-mail para confirmar e depois faça login.",
-        });
-        setMode("login");
-        setForm({ email: "", password: "" });
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: parsed.data.email,
-          password: parsed.data.password,
-        });
-        if (error) throw error;
-        toast({ title: "Bem-vindo(a)!" });
-        setOpen(false);
-        setForm({ email: "", password: "" });
-        navigate("/membro", { replace: true });
-      }
-    } catch (e: any) {
-      const message = (e?.message as string) ?? "Não foi possível continuar.";
-      toast({ title: "Erro", description: message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[420px]">
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl">
-            {mode === "login" ? "Acesso de Membros" : "Cadastro de Membro"}
-          </DialogTitle>
-          <DialogDescription>
-            {mode === "login"
-              ? "Entre com seu e-mail e senha para acessar a área do membro."
-              : "Crie sua conta para acessar conteúdo exclusivo para membros."}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[420px] overflow-hidden">
+        {/* Background Logo */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
+          <img src={logo} alt="" className="w-64 h-64 grayscale" />
+        </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="member-email">E-mail</Label>
-            <Input
-              id="member-email"
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
-              placeholder="voce@exemplo.com"
-              autoComplete="email"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="member-password">Senha</Label>
-            <Input
-              id="member-password"
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
-              placeholder="••••••••"
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-            />
+        <div className="relative z-10">
+          <DialogHeader className="text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand/10 shadow-inner">
+              <img src={logo} alt="Logo IBLV" className="h-10 w-10" />
+            </div>
+            <DialogTitle className="font-display text-2xl">Portal do Membro</DialogTitle>
+            <DialogDescription>
+              Acesse sua conta ou realize seu cadastro no portal oficial da nossa igreja.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-8 flex flex-col gap-4">
+            <Button
+              asChild
+              variant="brand"
+              size="lg"
+              className="h-14 w-full text-lg shadow-glow-sm hover:translate-y-[-2px] transition-all duration-300"
+            >
+              <a
+                href="https://app.enuves.com/authentication/login?returnUrl=%2Fdashboard%2Foverview"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3"
+              >
+                <LogIn className="w-5 h-5" />
+                Fazer Login
+              </a>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="h-14 w-full text-lg border-2 hover:bg-brand/5 hover:border-brand/50 hover:translate-y-[-2px] transition-all duration-300"
+            >
+              <a
+                href="https://app.enuves.com/institutions/92340/people/register"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-3"
+              >
+                <UserPlus className="w-5 h-5" />
+                Fazer Cadastro
+              </a>
+            </Button>
           </div>
 
-          <Button variant="brand" size="lg" className="w-full" onClick={() => void submit()} disabled={loading}>
-            {loading ? "Aguarde…" : mode === "login" ? "Entrar" : "Cadastrar"}
-          </Button>
-
-          <div className="text-center text-sm text-muted-foreground">
-            {mode === "login" ? (
-              <>
-                Caso não seja membro,{" "}
-                <button className="brand-underline font-medium text-foreground" onClick={() => setMode("signup")}>
-                  cadastre-se aqui
-                </button>
-              </>
-            ) : (
-              <>
-                Já tem cadastro?{" "}
-                <button className="brand-underline font-medium text-foreground" onClick={() => setMode("login")}>
-                  Faça login
-                </button>
-              </>
-            )}
-          </div>
+          <p className="mt-8 text-center text-xs text-muted-foreground">
+            Você será redirecionado para a plataforma <span className="font-semibold">Enuves</span>.
+          </p>
         </div>
       </DialogContent>
     </Dialog>
