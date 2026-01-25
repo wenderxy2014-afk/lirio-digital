@@ -83,31 +83,23 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
         setLoading(true);
 
         try {
-            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                email: setupForm.email,
-                password: setupForm.password,
-                options: {
-                    data: {
-                        full_name: setupForm.fullName,
-                    },
-                },
-            });
-
-            if (signUpError) throw signUpError;
-            if (!signUpData.user) throw new Error("Falha ao criar usuário");
-
-            const { error: roleError } = await supabase.functions.invoke("create-admin-user", {
+            // Use edge function to create admin with proper permissions
+            const { data, error: createError } = await supabase.functions.invoke("create-admin-user", {
                 body: {
                     email: setupForm.email,
                     password: setupForm.password,
                     fullName: setupForm.fullName,
                     role: "admin",
-                    sendEmail: false,
                 },
             });
 
-            if (roleError) {
-                console.warn("Error via edge function:", roleError);
+            if (createError) {
+                console.error("Error creating admin:", createError);
+                throw createError;
+            }
+
+            if (!data || !data.success) {
+                throw new Error(data?.error || "Falha ao criar administrador");
             }
 
             toast({
