@@ -45,20 +45,29 @@ serve(async (req) => {
 
     const day = todayKeySP();
 
-    // 0) Optional: Clean history if requested via header or query param
-    const url = new URL(req.url);
-    const hasCleanHeader = req.headers.get("x-clean-history")?.toLowerCase() === "true";
-    const hasCleanQuery = url.searchParams.get("clean") === "true";
+    // 0) Optional: Clean history if requested (checks url, body and headers)
+    const isCleanRequested =
+      req.url.includes("clean=true") ||
+      req.headers.get("x-clean-history") === "true";
 
-    if (hasCleanHeader || hasCleanQuery) {
-      console.log("Cleaning history requested...");
-      const { error: deleteError } = await admin
+    console.log(`Request URL: ${req.url}`);
+    console.log(`Is Clean Requested: ${isCleanRequested}`);
+
+    if (isCleanRequested) {
+      console.log(`Cleaning devotionals before: ${day}`);
+      const { data: count, error: deleteError } = await admin
         .from("ebd_devotionals")
         .delete()
-        .lt("day", day);
+        .lt("day", day)
+        .select();
 
       if (deleteError) throw deleteError;
-      return new Response(JSON.stringify({ message: "History cleaned successfully." }), {
+
+      console.log(`Deleted ${count?.length ?? 0} records.`);
+      return new Response(JSON.stringify({
+        message: "History cleaned successfully.",
+        deletedCount: count?.length ?? 0
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
