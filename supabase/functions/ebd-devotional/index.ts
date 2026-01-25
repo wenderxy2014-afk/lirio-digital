@@ -46,8 +46,15 @@ serve(async (req) => {
     const day = todayKeySP();
 
     // 0) Optional: Clean history if requested
-    const { cleanHistory } = await req.json().catch(() => ({}));
-    if (cleanHistory) {
+    let shouldClean = false;
+    try {
+      const body = await req.clone().json();
+      shouldClean = !!body?.cleanHistory;
+    } catch (e) {
+      // Ignora erro se não houver body
+    }
+
+    if (shouldClean) {
       console.log("Cleaning history, keeping only from today onwards...");
       const { error: deleteError } = await admin
         .from("ebd_devotionals")
