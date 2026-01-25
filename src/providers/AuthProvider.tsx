@@ -75,8 +75,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(null);
           setRoles([]);
           
-          // Then sign out from Supabase
-          await supabase.auth.signOut();
+          // Sign out from Supabase with scope 'local' to clear session from storage
+          await supabase.auth.signOut({ scope: 'local' });
         } catch (error) {
           console.error("Error signing out:", error);
         }
