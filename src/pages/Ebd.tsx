@@ -24,32 +24,27 @@ export default function EbdPage() {
   const pastList = listData?.filter((d) => d.id !== today?.id).slice(0, 7);
 
   const handleCleanHistory = async () => {
-    if (!confirm("Isso apagará todos os devocionais repetidos recentes (inclusive o de hoje) para que o sistema gere um novo agora. Continuar?")) return;
+    if (!confirm("Isso apagará TODO o histórico de devocionais (inclusive o de hoje) para gerar um novo do zero. Isso resolverá as repetições. Continuar?")) return;
 
     setCleaning(true);
     try {
-      const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
-
-      // Delete directly from DB if user is admin/editor
-      // We use .lte to delete today's broken entry too, forcing a re-generation
+      // Emergency: Delete EVERYTHING to stop repetitions
       const { data, error } = await supabase
         .from("ebd_devotionals")
         .delete()
-        .lte("day", todayDate)
+        .neq("id", "00000000-0000-0000-0000-000000000000") // This deletes everything
         .select();
 
       if (error) throw error;
 
-      const count = data?.length ?? 0;
       toast({
-        title: "Histórico limpo!",
-        description: `${count} entradas foram removidas. O sistema está gerando um novo devocional...`
+        title: "Limpeza Completa!",
+        description: `Removidos ${data?.length ?? 0} registros. O sistema vai gerar um guia novo em instantes.`
       });
 
-      // Invalidate both today and the list
       await queryClient.invalidateQueries({ queryKey: ["ebd"] });
     } catch (e: any) {
-      toast({ title: "Erro ao limpar", description: e.message, variant: "destructive" });
+      toast({ title: "Erro", description: "Certifique-se de estar logado como Admin. Se o erro persistir, tente novamente em 1 minuto.", variant: "destructive" });
     } finally {
       setCleaning(false);
     }
@@ -66,18 +61,16 @@ export default function EbdPage() {
         </div>
 
         <div className="flex gap-2">
-          {canManage && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-destructive hover:bg-destructive/10"
-              onClick={handleCleanHistory}
-              disabled={cleaning || isLoading}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              {cleaning ? "Limpando..." : "Resetar Estudos Repetidos"}
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive border-destructive/50 hover:bg-destructive hover:text-white"
+            onClick={handleCleanHistory}
+            disabled={cleaning || isLoading}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {cleaning ? "Limpando..." : "LIMPAR TUDO E RECOMEÇAR"}
+          </Button>
         </div>
       </header>
 

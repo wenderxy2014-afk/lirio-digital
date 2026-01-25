@@ -115,7 +115,7 @@ serve(async (req) => {
     ];
     const randomTheme = themes[Math.floor(Math.random() * themes.length)];
 
-    const user = `Crie o devocional do dia (${day}).\n\nContexto: O tema ou foco bíblico de hoje deve ser sobre: "${randomTheme}".\n\nRegras:\n- Retorne APENAS JSON válido (sem markdown).\n- Campos: title (string), bible_reference (string), body (string).\n- body: 900 a 1400 caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).\n- Evite mencionar que foi gerado por IA.\n- Títulos que você JÁ usou e DEVE EVITAR: [${excludedTitles}].\n- Crie um título NOVO e CRIATIVO, diferente dos anteriores.`;
+    const user = `Crie o devocional do dia (${day}).\n\nContexto: O tema ou foco bíblico de hoje deve ser sobre: "${randomTheme}".\n\nRegras:\n- Retorne APENAS JSON válido (sem markdown).\n- Campos: title (string), bible_reference (string), body (string).\n- body: 900 a 1400 caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).\n- Evite mencionar que foi gerado por IA.\n- Títulos BLOQUEADOS (NUNCA USE): [${excludedTitles}, "A Rocha que não se Abala"].\n- IMPORTANTE: Crie um título TOTALMENTE novo, poético e inspirador, diferente de qualquer um acima.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -129,7 +129,7 @@ serve(async (req) => {
           { role: "system", content: system },
           { role: "user", content: user },
         ],
-        temperature: 0.8,
+        temperature: 0.9,
       }),
     });
 
