@@ -39,10 +39,11 @@ interface ButtonsContent {
 }
 
 interface CarouselContent {
-  banners: Array<{
+  slides: Array<{
     image_url: string;
     alt_text: string;
     link?: string;
+    order?: number;
   }>;
 }
 
@@ -120,7 +121,7 @@ interface TextsContent {
 
   // Carousel section state
   const [carouselForm, setCarouselForm] = useState<CarouselContent>({
-    banners: [],
+    slides: [],
   });
 
   // Texts section state
@@ -412,17 +413,17 @@ interface TextsContent {
                   }}
                   className="space-y-6"
                 >
-                  {carouselForm.banners.map((banner, index) => (
+                  {carouselForm.slides.map((slide, index) => (
                     <div key={index} className="rounded-lg border p-4 space-y-4">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium">Banner {index + 1}</h4>
+                        <h4 className="font-medium">Slide {index + 1}</h4>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            const newBanners = carouselForm.banners.filter((_, i) => i !== index);
-                            setCarouselForm({ ...carouselForm, banners: newBanners });
+                            const newSlides = carouselForm.slides.filter((_, i) => i !== index);
+                            setCarouselForm({ ...carouselForm, slides: newSlides });
                           }}
                         >
                           Remover
@@ -430,15 +431,15 @@ interface TextsContent {
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Imagem do Banner</Label>
+                        <Label>Imagem do Slide</Label>
                         <ImageUploader
-                          currentImageUrl={banner.image_url}
+                          currentImageUrl={slide.image_url}
                           onUploadComplete={(url) => {
-                            const newBanners = [...carouselForm.banners];
-                            newBanners[index].image_url = url;
-                            setCarouselForm({ ...carouselForm, banners: newBanners });
+                            const newSlides = [...carouselForm.slides];
+                            newSlides[index].image_url = url;
+                            setCarouselForm({ ...carouselForm, slides: newSlides });
                           }}
-                          folder="banners"
+                          folder="carousel"
                         />
                       </div>
 
@@ -446,11 +447,11 @@ interface TextsContent {
                         <div className="space-y-2">
                           <Label>Texto Alternativo</Label>
                           <Input
-                            value={banner.alt_text}
+                            value={slide.alt_text}
                             onChange={(e) => {
-                              const newBanners = [...carouselForm.banners];
-                              newBanners[index].alt_text = e.target.value;
-                              setCarouselForm({ ...carouselForm, banners: newBanners });
+                              const newSlides = [...carouselForm.slides];
+                              newSlides[index].alt_text = e.target.value;
+                              setCarouselForm({ ...carouselForm, slides: newSlides });
                             }}
                             placeholder="Descrição da imagem"
                           />
@@ -459,11 +460,11 @@ interface TextsContent {
                         <div className="space-y-2">
                           <Label>Link (opcional)</Label>
                           <Input
-                            value={banner.link || ""}
+                            value={slide.link || ""}
                             onChange={(e) => {
-                              const newBanners = [...carouselForm.banners];
-                              newBanners[index].link = e.target.value;
-                              setCarouselForm({ ...carouselForm, banners: newBanners });
+                              const newSlides = [...carouselForm.slides];
+                              newSlides[index].link = e.target.value;
+                              setCarouselForm({ ...carouselForm, slides: newSlides });
                             }}
                             placeholder="/eventos/especial"
                           />
@@ -478,11 +479,11 @@ interface TextsContent {
                     onClick={() => {
                       setCarouselForm({
                         ...carouselForm,
-                        banners: [...carouselForm.banners, { image_url: "", alt_text: "" }],
+                        slides: [...carouselForm.slides, { image_url: "", alt_text: "", order: carouselForm.slides.length + 1 }],
                       });
                     }}
                   >
-                    Adicionar Banner
+                    Adicionar Slide
                   </Button>
 
                   <Button type="submit" disabled={saveMutation.isPending}>
