@@ -28,7 +28,9 @@ export default function EbdPage() {
 
     setCleaning(true);
     try {
-      const { data, error } = await supabase.functions.invoke("ebd-devotional?clean=true");
+      const { data, error } = await supabase.functions.invoke("ebd-devotional", {
+        headers: { "x-clean-history": "true" }
+      });
 
       if (error) throw error;
 

@@ -45,8 +45,8 @@ serve(async (req) => {
 
     const day = todayKeySP();
 
-    // 0) Optional: Clean history if requested via query param ?clean=true
-    if (req.url.includes("clean=true")) {
+    // 0) Optional: Clean history if requested via header x-clean-history
+    if (req.headers.get("x-clean-history") === "true") {
       console.log("Cleaning history, keeping only from today onwards...");
       const { error: deleteError } = await admin
         .from("ebd_devotionals")
