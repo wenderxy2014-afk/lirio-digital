@@ -21,11 +21,14 @@ export default function EbdPage() {
 
   const canManage = hasAnyRole(roles, ["admin", "editor"]);
 
-  // Filter out today's devotional AND duplicates by title
+  // Filter out today's devotional, duplicates by title, AND the specific repetitive title
   const pastList = listData?.reduce((acc: any[], current) => {
     const isToday = current.id === today?.id;
     const isDuplicate = acc.some(item => item.title === current.title);
-    if (!isToday && !isDuplicate) {
+    const isSameAsToday = today?.title === current.title; // If today has the same title, remove from list
+    const isRepetitive = current.title.includes("A Rocha que não se Abala"); // Hard block for the repetitive one
+
+    if (!isToday && !isDuplicate && !isSameAsToday && !isRepetitive) {
       acc.push(current);
     }
     return acc;
@@ -41,7 +44,7 @@ export default function EbdPage() {
       return;
     }
 
-    if (!confirm("Isso apagará TODO o histórico de devocionais (inclusive o de hoje) para gerar um novo do zero. Isso resolverá as repetições. Continuar?")) return;
+    if (!confirm("Isso apagará TODO o histórico do banco de dados para recomeçar do zero. Continuar?")) return;
 
     setCleaning(true);
     try {
@@ -64,8 +67,8 @@ export default function EbdPage() {
     } catch (e: any) {
       console.error("Erro ao limpar:", e);
       toast({
-        title: "Erro na Limpeza",
-        description: "Verifique sua conexão ou permissões de administrador.",
+        title: "Erro",
+        description: e.message,
         variant: "destructive"
       });
     } finally {
@@ -83,18 +86,20 @@ export default function EbdPage() {
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive border-destructive/50 hover:bg-destructive hover:text-white"
-            onClick={handleCleanHistory}
-            disabled={cleaning || isLoading}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {cleaning ? "Limpando..." : "LIMPAR TUDO E RECOMEÇAR"}
-          </Button>
-        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/50 hover:bg-destructive hover:text-white"
+              onClick={handleCleanHistory}
+              disabled={cleaning || isLoading}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {cleaning ? "Limpando..." : "ADMIN: LIMPAR TUDO"}
+            </Button>
+          </div>
+        )}
       </header>
 
       <section className="mt-8 space-y-6">
