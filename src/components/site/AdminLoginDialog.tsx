@@ -12,14 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface AdminLoginDialogProps {
     children: React.ReactNode;
 }
 
-type ViewMode = "login" | "forgot-password";
+type ViewMode = "login" | "forgot-password" | "setup";
 
 export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
     const { toast } = useToast();
@@ -30,6 +30,12 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
     const [viewMode, setViewMode] = useState<ViewMode>("login");
     const [resetEmail, setResetEmail] = useState("");
     const [checkingAdmin, setCheckingAdmin] = useState(false);
+    const [setupForm, setSetupForm] = useState({
+        email: "",
+        password: "",
+        confirmPassword: "",
+        fullName: ""
+    });
 
     const checkAdminExists = async () => {
         setCheckingAdmin(true);
@@ -42,22 +48,99 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
             }
 
             if (!data?.adminExists) {
-                // No admin exists, redirect to setup
-                console.log("No admin found, redirecting to setup...");
-                toast({
-                    title: "Configuração Inicial",
-                    description: "Nenhum administrador encontrado. Redirecionando para configuração...",
-                });
-                // Close dialog and navigate after a short delay
-                setTimeout(() => {
-                    setOpen(false);
-                    navigate("/admin/setup");
-                }, 1500);
+                // No admin exists, show setup form
+                setViewMode("setup");
             }
         } catch (error) {
             console.error("Error checking for admin:", error);
         } finally {
             setCheckingAdmin(false);
+        }
+    };
+
+    const handleSetup = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (setupForm.password !== setupForm.confirmPassword) {
+            toast({
+                title: "Erro",
+                description: "As senhas não coincidem",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (setupForm.password.length < 6) {
+            toast({
+                title: "Erro",
+                description: "A senha deve ter pelo menos 6 caracteres",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                email: setupForm.email,
+                password: setupForm.password,
+                options: {
+                    data: {
+                        full_name: setupForm.fullName,
+                    },
+                },
+            });
+
+            if (signUpError) throw signUpError;
+            if (!signUpData.user) throw new Error("Falha ao criar usuário");
+
+            const { error: roleError } = await supabase.functions.invoke("create-admin-user", {
+                body: {
+                    email: setupForm.email,
+                    password: setupForm.password,
+                    fullName: setupForm.fullName,
+                    role: "admin",
+                    sendEmail: false,
+                },
+            });
+
+            if (roleError) {
+                console.warn("Error via edge function:", roleError);
+            }
+
+            toast({
+                title: "Sucesso!",
+                description: "Primeiro administrador criado com sucesso",
+            });
+
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: setupForm.email,
+                password: setupForm.password,
+            });
+
+            if (signInError) {
+                toast({
+                    title: "Aviso",
+                    description: "Administrador criado. Faça login para continuar.",
+                });
+                setViewMode("login");
+                setSetupForm({ email: "", password: "", confirmPassword: "", fullName: "" });
+            } else {
+                setOpen(false);
+                setSetupForm({ email: "", password: "", confirmPassword: "", fullName: "" });
+                setViewMode("login");
+                navigate("/admin");
+            }
+        } catch (error: any) {
+            console.error("Setup error:", error);
+            toast({
+                title: "Erro",
+                description: error.message || "Erro ao criar administrador",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -150,16 +233,21 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
             <DialogContent className="sm:max-w-[400px]">
                 <DialogHeader>
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                        <ShieldCheck className="h-6 w-6 text-primary" />
+                        {viewMode === "setup" ? (
+                            <Shield className="h-6 w-6 text-primary" />
+                        ) : (
+                            <ShieldCheck className="h-6 w-6 text-primary" />
+                        )}
                     </div>
                     <DialogTitle className="text-center font-display text-xl">
-                        {viewMode === "login" ? "Acesso Administrativo" : "Recuperar Senha"}
+                        {viewMode === "login" && "Acesso Administrativo"}
+                        {viewMode === "forgot-password" && "Recuperar Senha"}
+                        {viewMode === "setup" && "Configuração Inicial"}
                     </DialogTitle>
                     <DialogDescription className="text-center">
-                        {viewMode === "login" 
-                            ? "Entre com suas credenciais de gestão."
-                            : "Digite seu e-mail para receber o link de recuperação."
-                        }
+                        {viewMode === "login" && "Entre com suas credenciais de gestão."}
+                        {viewMode === "forgot-password" && "Digite seu e-mail para receber o link de recuperação."}
+                        {viewMode === "setup" && "Crie o primeiro administrador do sistema"}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -213,7 +301,7 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                             Esqueci minha senha
                         </Button>
                 </form>
-                ) : (
+                ) : viewMode === "forgot-password" ? (
                     <form onSubmit={handleForgotPassword} className="space-y-4 pt-2">
                         <div className="space-y-2">
                             <Label htmlFor="reset-email">E-mail</Label>
@@ -245,6 +333,68 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                             onClick={() => setViewMode("login")}
                         >
                             Voltar para o login
+                        </Button>
+                    </form>
+                ) : (
+                    <form onSubmit={handleSetup} className="space-y-4 pt-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="setup-fullName">Nome Completo</Label>
+                            <Input
+                                id="setup-fullName"
+                                type="text"
+                                value={setupForm.fullName}
+                                onChange={(e) => setSetupForm(s => ({ ...s, fullName: e.target.value }))}
+                                placeholder="Seu nome completo"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="setup-email">E-mail</Label>
+                            <Input
+                                id="setup-email"
+                                type="email"
+                                value={setupForm.email}
+                                onChange={(e) => setSetupForm(s => ({ ...s, email: e.target.value }))}
+                                placeholder="admin@igreja.com"
+                                required
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="setup-password">Senha</Label>
+                            <Input
+                                id="setup-password"
+                                type="password"
+                                value={setupForm.password}
+                                onChange={(e) => setSetupForm(s => ({ ...s, password: e.target.value }))}
+                                placeholder="••••••••"
+                                required
+                                minLength={6}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="setup-confirmPassword">Confirmar Senha</Label>
+                            <Input
+                                id="setup-confirmPassword"
+                                type="password"
+                                value={setupForm.confirmPassword}
+                                onChange={(e) => setSetupForm(s => ({ ...s, confirmPassword: e.target.value }))}
+                                placeholder="••••••••"
+                                required
+                                minLength={6}
+                            />
+                        </div>
+
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Criando Administrador...
+                                </>
+                            ) : (
+                                "Criar Primeiro Administrador"
+                            )}
                         </Button>
                     </form>
                 )}
