@@ -222,7 +222,7 @@ Regras:
       throw new Error("Generated devotional is too short");
     }
 
-    // 3) Insert (handle race)
+    // 3) Insert or Update (Upsert)
     const insertPayload = {
       day,
       title,
@@ -231,15 +231,36 @@ Regras:
       model: "google/gemini-3-flash-preview",
     };
 
-    const { data: inserted, error: insertError } = await admin
-      .from("ebd_devotionals")
-      .insert(insertPayload)
-      .select("id,day,title,body,bible_reference,created_at")
-      .maybeSingle();
+    let resultData: Devotional | null = null;
+    let resultError = null;
 
-    if (insertError) {
-      // If another request inserted first, fetch and return.
-      console.warn("Insert error (retrying read):", insertError.message);
+    if (forceNew) {
+      // Upsert based on Day (assuming day is unique or we want to overwrite today's entry)
+      // Note: 'onConflict' should target the unique constraint column, typically 'day' if declared unique.
+      const { data, error } = await admin
+        .from("ebd_devotionals")
+        .upsert(insertPayload, { onConflict: "day" })
+        .select("id,day,title,body,bible_reference,created_at")
+        .maybeSingle();
+
+      resultData = data;
+      resultError = error;
+    } else {
+      // Standard Insert
+      const { data, error } = await admin
+        .from("ebd_devotionals")
+        .insert(insertPayload)
+        .select("id,day,title,body,bible_reference,created_at")
+        .maybeSingle();
+
+      resultData = data;
+      resultError = error;
+    }
+
+    if (resultError) {
+      // If another request inserted first (race condition on insert), fetch and return.
+      // Or if upsert failed for some reason.
+      console.warn("Write error (retrying read):", resultError.message);
       const { data: existing, error: readError } = await admin
         .from("ebd_devotionals")
         .select("id,day,title,body,bible_reference,created_at")
@@ -251,10 +272,10 @@ Regras:
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      throw insertError;
+      throw resultError;
     }
 
-    return new Response(JSON.stringify(inserted), {
+    return new Response(JSON.stringify(resultData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
