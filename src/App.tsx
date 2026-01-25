@@ -27,6 +27,11 @@ import StudyDetailPage from "@/pages/member/StudyDetail";
 import AdminHomePage from "@/pages/admin/AdminHome";
 import AdminSettingsPage from "@/pages/admin/AdminSettings";
 import AdminContentPage from "@/pages/admin/AdminContent";
+import AdminSetupPage from "@/pages/admin/Setup";
+import AdminUsersPage from "@/pages/admin/Users";
+import AdminHomeCMSPage from "@/pages/admin/HomeCMS";
+import AdminDevotionalAIPage from "@/pages/admin/DevotionalAI";
+import ResetPasswordPage from "@/pages/auth/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +53,8 @@ const App = () => (
             <Route path="/testemunhos" element={<TestimonialsPage />} />
             <Route path="/ofertas" element={<OfferingsPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/admin/setup" element={<AdminSetupPage />} />
 
             <Route element={<RequireAuth />}>
               <Route path="/membro" element={<MemberHomePage />} />
@@ -61,6 +68,9 @@ const App = () => (
               <Route path="/admin" element={<AdminHomePage />} />
               <Route path="/admin/conteudo" element={<AdminContentPage />} />
               <Route path="/admin/configuracoes" element={<AdminSettingsPage />} />
+              <Route path="/admin/usuarios" element={<AdminUsersPage />} />
+              <Route path="/admin/home-cms" element={<AdminHomeCMSPage />} />
+              <Route path="/admin/devocional-ia" element={<AdminDevotionalAIPage />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

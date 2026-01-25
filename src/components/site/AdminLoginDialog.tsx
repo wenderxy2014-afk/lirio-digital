@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Dialog,
     DialogContent,
@@ -19,12 +19,50 @@ interface AdminLoginDialogProps {
     children: React.ReactNode;
 }
 
+type ViewMode = "login" | "forgot-password";
+
 export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
     const { toast } = useToast();
     const navigate = useNavigate();
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState({ email: "", password: "" });
     const [loading, setLoading] = useState(false);
+    const [viewMode, setViewMode] = useState<ViewMode>("login");
+    const [resetEmail, setResetEmail] = useState("");
+    const [checkingAdmin, setCheckingAdmin] = useState(false);
+
+    // Check if admin exists when dialog opens
+    useEffect(() => {
+        if (open) {
+            checkAdminExists();
+        }
+    }, [open]);
+
+    const checkAdminExists = async () => {
+        setCheckingAdmin(true);
+        try {
+            const { data, error } = await supabase.functions.invoke("check-admin-exists");
+
+            if (error) {
+                console.error("Error checking for admin:", error);
+                return;
+            }
+
+            if (!data?.adminExists) {
+                // No admin exists, redirect to setup
+                toast({
+                    title: "Configuração Inicial",
+                    description: "Nenhum administrador encontrado. Redirecionando para configuração...",
+                });
+                setOpen(false);
+                navigate("/admin/setup");
+            }
+        } catch (error) {
+            console.error("Error checking for admin:", error);
+        } finally {
+            setCheckingAdmin(false);
+        }
+    };
 
     const submit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,6 +87,7 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                 toast({ title: "Bem-vindo, Administrador!", description: "Acesso autorizado." });
                 setOpen(false);
                 setForm({ email: "", password: "" });
+                setViewMode("login");
                 navigate("/admin");
             } else {
                 toast({
@@ -66,21 +105,67 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
         }
     };
 
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+                redirectTo: `${window.location.origin}/auth/reset-password`,
+            });
+
+            if (error) throw error;
+
+            toast({
+                title: "E-mail Enviado!",
+                description: "Verifique sua caixa de entrada para redefinir a senha.",
+            });
+            setResetEmail("");
+            setViewMode("login");
+        } catch (e: any) {
+            toast({
+                title: "Erro",
+                description: e.message || "Não foi possível enviar o e-mail",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOpenChange = (newOpen: boolean) => {
+        setOpen(newOpen);
+        if (!newOpen) {
+            // Reset to login view when closing
+            setTimeout(() => setViewMode("login"), 200);
+        }
+    };
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent className="sm:max-w-[400px]">
                 <DialogHeader>
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                         <ShieldCheck className="h-6 w-6 text-primary" />
                     </div>
-                    <DialogTitle className="text-center font-display text-xl">Acesso Administrativo</DialogTitle>
+                    <DialogTitle className="text-center font-display text-xl">
+                        {viewMode === "login" ? "Acesso Administrativo" : "Recuperar Senha"}
+                    </DialogTitle>
                     <DialogDescription className="text-center">
-                        Entre com suas credenciais de gestão.
+                        {viewMode === "login" 
+                            ? "Entre com suas credenciais de gestão."
+                            : "Digite seu e-mail para receber o link de recuperação."
+                        }
                     </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={submit} className="space-y-4 pt-2">
+                {checkingAdmin ? (
+                    <div className="py-8 flex flex-col items-center justify-center gap-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">Verificando sistema...</p>
+                    </div>
+                ) : viewMode === "login" ? (
+                    <form onSubmit={submit} className="space-y-4 pt-2">
                     <div className="space-y-2">
                         <Label htmlFor="admin-email">E-mail</Label>
                         <Input
@@ -105,9 +190,60 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
                     </div>
 
                     <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Entrar no Painel"}
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Entrando...
+                                </>
+                            ) : (
+                                "Entrar no Painel"
+                            )}
                     </Button>
+
+                        <Button
+                            type="button"
+                            variant="link"
+                            className="w-full text-sm text-muted-foreground"
+                            onClick={() => setViewMode("forgot-password")}
+                        >
+                            Esqueci minha senha
+                        </Button>
                 </form>
+                ) : (
+                    <form onSubmit={handleForgotPassword} className="space-y-4 pt-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="reset-email">E-mail</Label>
+                            <Input
+                                id="reset-email"
+                                type="email"
+                                value={resetEmail}
+                                onChange={(e) => setResetEmail(e.target.value)}
+                                placeholder="seu@email.com"
+                                required
+                            />
+                        </div>
+
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Enviando...
+                                </>
+                            ) : (
+                                "Enviar Link de Recuperação"
+                            )}
+                        </Button>
+
+                        <Button
+                            type="button"
+                            variant="link"
+                            className="w-full text-sm text-muted-foreground"
+                            onClick={() => setViewMode("login")}
+                        >
+                            Voltar para o login
+                        </Button>
+                    </form>
+                )}
             </DialogContent>
         </Dialog>
     );
