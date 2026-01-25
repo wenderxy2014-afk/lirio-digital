@@ -18,23 +18,24 @@ export default function EbdPage() {
   const queryClient = useQueryClient();
   const [cleaning, setCleaning] = useState(false);
 
-  const canManage = hasAnyRole(roles, ["admin"]);
+  const canManage = hasAnyRole(roles, ["admin", "editor"]);
 
   // Filter out today's devotional from the list to avoid duplication
   const pastList = listData?.filter((d) => d.id !== today?.id).slice(0, 7);
 
   const handleCleanHistory = async () => {
-    if (!confirm("Deseja realmente apagar todo o histórico antigo e manter apenas o de hoje?")) return;
+    if (!confirm("Isso apagará todos os devocionais repetidos recentes (inclusive o de hoje) para que o sistema gere um novo agora. Continuar?")) return;
 
     setCleaning(true);
     try {
-      const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+      const todayDate = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
-      // Delete directly from DB if user is admin (RLS allows this)
+      // Delete directly from DB if user is admin/editor
+      // We use .lte to delete today's broken entry too, forcing a re-generation
       const { data, error } = await supabase
         .from("ebd_devotionals")
         .delete()
-        .lt("day", today)
+        .lte("day", todayDate)
         .select();
 
       if (error) throw error;
@@ -42,10 +43,11 @@ export default function EbdPage() {
       const count = data?.length ?? 0;
       toast({
         title: "Histórico limpo!",
-        description: `${count} devocionais antigos foram removidos com sucesso.`
+        description: `${count} entradas foram removidas. O sistema está gerando um novo devocional...`
       });
 
-      queryClient.invalidateQueries({ queryKey: ["ebd"] });
+      // Invalidate both today and the list
+      await queryClient.invalidateQueries({ queryKey: ["ebd"] });
     } catch (e: any) {
       toast({ title: "Erro ao limpar", description: e.message, variant: "destructive" });
     } finally {
@@ -63,18 +65,20 @@ export default function EbdPage() {
           </p>
         </div>
 
-        {canManage && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:bg-destructive/10"
-            onClick={handleCleanHistory}
-            disabled={cleaning}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {cleaning ? "Limpando..." : "Limpar Histórico Antigo"}
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {canManage && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:bg-destructive/10"
+              onClick={handleCleanHistory}
+              disabled={cleaning || isLoading}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {cleaning ? "Limpando..." : "Resetar Estudos Repetidos"}
+            </Button>
+          )}
+        </div>
       </header>
 
       <section className="mt-8 space-y-6">
