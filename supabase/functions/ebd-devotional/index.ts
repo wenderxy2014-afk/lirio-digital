@@ -235,22 +235,11 @@ Regras:
     let resultError = null;
 
     if (forceNew) {
-      // FORCE REGENERATE: Delete ANY existing record for today first
-      // This guarantees we don't return old data and don't depend on "onConflict" constraints
-      const { error: deleteError } = await admin
-        .from("ebd_devotionals")
-        .delete()
-        .eq("day", day);
-
-      if (deleteError) {
-        console.error("Error deleting old devotional:", deleteError);
-        // Continue to try insert anyway
-      }
-
-      // Now insert new one
+      // FORCE REGENERATE: Use Upsert to overwrite existing for this day
+      // This is safer than Delete + Insert and handles the UNIQUE constraint on 'day' automatically.
       const { data, error } = await admin
         .from("ebd_devotionals")
-        .insert(insertPayload)
+        .upsert(insertPayload, { onConflict: 'day' })
         .select("id,day,title,body,bible_reference,created_at")
         .maybeSingle();
 
@@ -270,6 +259,12 @@ Regras:
     }
 
     if (resultError) {
+      // If we forced a new one and it failed, DO NOT return the old one. Report the error.
+      if (forceNew) {
+        console.error("Upsert failed during force_new:", resultError);
+        throw resultError;
+      }
+
       // If another request inserted first (race condition on insert), fetch and return.
       // Or if upsert failed for some reason.
       console.warn("Write error (retrying read):", resultError.message);

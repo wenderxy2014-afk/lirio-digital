@@ -321,7 +321,7 @@ const Index = () => {
                       href={slide.link}
                       target={slide.link.startsWith("http") ? "_blank" : "_self"}
                       rel={slide.link.startsWith("http") ? "noopener noreferrer" : undefined}
-                      className="block relative overflow-hidden rounded-3xl border shadow-lift h-[300px] md:h-[400px] bg-background transition-all hover:ring-2 hover:ring-primary hover:opacity-95"
+                      className="block relative overflow-hidden rounded-3xl border shadow-lift w-full aspect-video bg-background transition-all hover:ring-2 hover:ring-primary hover:opacity-95"
                     >
                       <img
                         src={slide.image_url}
@@ -331,7 +331,7 @@ const Index = () => {
                       />
                     </a>
                   ) : (
-                    <div className="relative overflow-hidden rounded-3xl border shadow-lift h-[300px] md:h-[400px] bg-background">
+                    <div className="relative overflow-hidden rounded-3xl border shadow-lift w-full aspect-video bg-background">
                       <img
                         src={slide.image_url}
                         alt={slide.alt_text}
