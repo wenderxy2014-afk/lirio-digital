@@ -1,8 +1,10 @@
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
+import { ShieldCheck } from "lucide-react";
 import logo from "@/assets/iblv-logo.png";
 import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
 import { MemberAuthDialog } from "./MemberAuthDialog";
+import { AdminLoginDialog } from "./AdminLoginDialog";
 
 const nav = [
   { to: "/", label: "Início" },
@@ -46,27 +48,38 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          {canAdmin && (
-            <Button asChild variant="soft" size="sm">
-              <NavLink to="/admin">Painel</NavLink>
-            </Button>
-          )}
-
           {user ? (
             <>
-              <Button asChild variant="soft" size="sm">
-                <NavLink to="/membro">Área do Membro</NavLink>
-              </Button>
-              <Button variant="brand" size="sm" onClick={() => void signOut()}>
+              {canAdmin ? (
+                <Button asChild className="bg-green-600 hover:bg-green-700 text-white border-green-700" size="sm">
+                  <NavLink to="/admin">Painel Ativo</NavLink>
+                </Button>
+              ) : (
+                <Button asChild variant="soft" size="sm">
+                  <NavLink to="/membro">Área do Membro</NavLink>
+                </Button>
+              )}
+
+              <Button variant="ghost" className="text-muted-foreground hover:text-foreground" size="sm" onClick={() => void signOut()}>
                 Sair
               </Button>
             </>
           ) : (
-            <MemberAuthDialog>
-              <Button variant="brand" size="sm">
-                Membros
-              </Button>
-            </MemberAuthDialog>
+            <>
+              {/* Botão administrativo discreto para quem não está logado */}
+              <div className="hidden md:block">
+                <AdminLoginDialog>
+                  <button className="text-muted-foreground/30 hover:text-primary transition-colors p-2" title="Acesso Administrativo">
+                    <ShieldCheck className="h-4 w-4" />
+                  </button>
+                </AdminLoginDialog>
+              </div>
+              <MemberAuthDialog>
+                <Button variant="brand" size="sm">
+                  Membros
+                </Button>
+              </MemberAuthDialog>
+            </>
           )}
         </div>
       </div>
