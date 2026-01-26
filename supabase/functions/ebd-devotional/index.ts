@@ -229,6 +229,7 @@ Regras:
       bible_reference: bible_reference || null,
       body,
       model: "google/gemini-3-flash-preview",
+      is_published: false,
     };
 
     let resultData: Devotional | null = null;
