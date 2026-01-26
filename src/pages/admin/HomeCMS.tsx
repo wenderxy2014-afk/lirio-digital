@@ -90,6 +90,8 @@ export default function HomeCMSPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["home-content"] });
+      queryClient.invalidateQueries({ queryKey: ["home-content-all"] });
+      queryClient.invalidateQueries({ queryKey: ["home_content"] });
       toast({
         title: "Salvo com sucesso!",
         description: "As alterações foram aplicadas",
