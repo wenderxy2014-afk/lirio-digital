@@ -235,18 +235,30 @@ Regras:
     let resultError = null;
 
     if (forceNew) {
-      // Upsert based on Day (assuming day is unique or we want to overwrite today's entry)
-      // Note: 'onConflict' should target the unique constraint column, typically 'day' if declared unique.
+      // FORCE REGENERATE: Delete ANY existing record for today first
+      // This guarantees we don't return old data and don't depend on "onConflict" constraints
+      const { error: deleteError } = await admin
+        .from("ebd_devotionals")
+        .delete()
+        .eq("day", day);
+
+      if (deleteError) {
+        console.error("Error deleting old devotional:", deleteError);
+        // Continue to try insert anyway
+      }
+
+      // Now insert new one
       const { data, error } = await admin
         .from("ebd_devotionals")
-        .upsert(insertPayload, { onConflict: "day" })
+        .insert(insertPayload)
         .select("id,day,title,body,bible_reference,created_at")
         .maybeSingle();
 
       resultData = data;
       resultError = error;
+
     } else {
-      // Standard Insert
+      // Standard Insert (Try to insert, if exists it will fail and we catch below)
       const { data, error } = await admin
         .from("ebd_devotionals")
         .insert(insertPayload)
