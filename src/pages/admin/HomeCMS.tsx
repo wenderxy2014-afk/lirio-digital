@@ -20,6 +20,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import bannerFamilia from "@/assets/banner-familia.png";
+import bannerMaturidade from "@/assets/banner-maturidade.png";
+import bannerHomens from "@/assets/banner-homens.png";
+import bannerCeia from "@/assets/banner-ceia.png";
+import heroVideo from "@/assets/hero-bg.mp4";
 
 interface HeroContent {
   welcome_text: string;
@@ -132,16 +137,50 @@ export default function HomeCMSPage() {
     next_steps_description: "",
   });
 
+  // Map to resolve asset paths to actual imports
+  const assetMap: Record<string, string> = {
+    '/src/assets/banner-familia.png': bannerFamilia,
+    'banner-familia.png': bannerFamilia,
+    '/src/assets/banner-maturidade.png': bannerMaturidade,
+    'banner-maturidade.png': bannerMaturidade,
+    '/src/assets/banner-homens.png': bannerHomens,
+    'banner-homens.png': bannerHomens,
+    '/src/assets/banner-ceia.png': bannerCeia,
+    'banner-ceia.png': bannerCeia,
+    'hero-bg.mp4': heroVideo,
+  };
+
+  const resolveAsset = (url: string) => {
+    if (!url) return "";
+    if (assetMap[url]) return assetMap[url];
+    // Also try removing leading slashes or paths if simple match fails
+    const filename = url.split('/').pop();
+    if (filename && assetMap[filename]) return assetMap[filename];
+    return url;
+  };
+
   // Load existing data
   useEffect(() => {
     if (homeContent?.hero) {
-      setHeroForm(homeContent.hero);
+      setHeroForm({
+        ...homeContent.hero,
+        // Ensure we show the resolved URL in the input preview if it's an asset, 
+        // BUT keep the original value for saving if unchanged? 
+        // Actually, for admin UX, it's better to show the resolved URL or allow overwrite.
+        // Let's resolve it for display.
+        video_url: resolveAsset(homeContent.hero.video_url)
+      });
     }
     if (homeContent?.buttons) {
       setButtonsForm(homeContent.buttons);
     }
     if (homeContent?.carousel) {
-      setCarouselForm(homeContent.carousel);
+      // Resolve all slide images
+      const resolvedSlides = (homeContent.carousel.slides || []).map((s: any) => ({
+        ...s,
+        image_url: resolveAsset(s.image_url)
+      }));
+      setCarouselForm({ slides: resolvedSlides });
     }
     if (homeContent?.texts) {
       setTextsForm(homeContent.texts);
