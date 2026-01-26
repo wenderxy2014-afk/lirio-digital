@@ -115,7 +115,7 @@ export default function EbdPage() {
           />
         )}
 
-        {!isLoading && !today && (
+        {!isLoading && (!today || today.title.toUpperCase().includes("[RASCUNHO]")) && (
           <Card className="p-6">
             <div className="text-sm text-muted-foreground">Ainda não há devocional de hoje.</div>
           </Card>
