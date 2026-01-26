@@ -77,12 +77,12 @@ const Index = () => {
   // Resolve image URLs (handle both asset paths and storage URLs)
   const resolvedCarouselData = carouselData.map((slide: any) => {
     const imageUrl = slide.image_url;
-    
+
     // If it's a local asset path, resolve it from the map
     if (imageUrl && assetMap[imageUrl]) {
       return { ...slide, image_url: assetMap[imageUrl] };
     }
-    
+
     // If it's already a full URL (from Supabase Storage), use as-is
     return slide;
   });
@@ -315,17 +315,33 @@ const Index = () => {
             {resolvedCarouselData
               .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
               .map((slide: any, index: number) => (
-              <CarouselItem key={index}>
-                <div className="relative overflow-hidden rounded-3xl border shadow-lift h-[300px] md:h-[400px] bg-zinc-900">
-                  <img
-                    src={slide.image_url}
-                    alt={slide.alt_text}
-                    loading="lazy"
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-              </CarouselItem>
-            ))}
+                <CarouselItem key={index}>
+                  {slide.link ? (
+                    <a
+                      href={slide.link}
+                      target={slide.link.startsWith("http") ? "_blank" : "_self"}
+                      rel={slide.link.startsWith("http") ? "noopener noreferrer" : undefined}
+                      className="block relative overflow-hidden rounded-3xl border shadow-lift h-[300px] md:h-[400px] bg-zinc-900 transition-all hover:ring-2 hover:ring-primary hover:opacity-95"
+                    >
+                      <img
+                        src={slide.image_url}
+                        alt={slide.alt_text}
+                        loading="lazy"
+                        className="h-full w-full object-contain"
+                      />
+                    </a>
+                  ) : (
+                    <div className="relative overflow-hidden rounded-3xl border shadow-lift h-[300px] md:h-[400px] bg-zinc-900">
+                      <img
+                        src={slide.image_url}
+                        alt={slide.alt_text}
+                        loading="lazy"
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  )}
+                </CarouselItem>
+              ))}
           </CarouselContent>
           <CarouselPrevious className="left-4" />
           <CarouselNext className="right-4" />
