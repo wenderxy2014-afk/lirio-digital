@@ -26,9 +26,10 @@ export default function EbdPage() {
     const isToday = current.id === today?.id;
     const isDuplicate = acc.some(item => item.title === current.title);
     const isSameAsToday = today?.title === current.title; // If today has the same title, remove from list
-    const isRepetitive = current.title.includes("A Rocha que não se Abala"); // Hard block for the repetitive one
+    const isRepetitive = current.title.includes("A Rocha que não se Abala");
+    const isDraft = current.title.toUpperCase().includes("[RASCUNHO]");
 
-    if (!isToday && !isDuplicate && !isSameAsToday && !isRepetitive) {
+    if (!isToday && !isDuplicate && !isSameAsToday && !isRepetitive && !isDraft) {
       acc.push(current);
     }
     return acc;
@@ -106,7 +107,7 @@ export default function EbdPage() {
         {isLoading && <div className="text-sm text-muted-foreground">Carregando…</div>}
 
         {/* Destaque de Hoje */}
-        {today && (
+        {today && !today.title.toUpperCase().includes("[RASCUNHO]") && (
           <DevotionalCard
             devotional={today}
             defaultExpanded={true}

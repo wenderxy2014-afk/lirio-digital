@@ -27,7 +27,6 @@ type Devotional = {
   body: string;
   bible_reference: string | null;
   created_at: string;
-  is_published: boolean;
 };
 
 export default function DevotionalAIPage() {
@@ -44,25 +43,29 @@ export default function DevotionalAIPage() {
   const [editBibleRef, setEditBibleRef] = useState("");
   const { toast } = useToast();
 
-  // ... (rest of the file until handleTogglePublish)
+  const isPublished = (title: string) => !title.toUpperCase().includes("[RASCUNHO]");
 
-  const handleTogglePublish = async (id: string, currentStatus: boolean, isResultView = false) => {
+  const handleTogglePublish = async (id: string, currentTitle: string, isResultView = false) => {
     try {
+      const isCurrentlyPublished = isPublished(currentTitle);
+      const cleanTitle = currentTitle.replace(/\[RASCUNHO\]\s?/gi, "").trim();
+      const newTitle = isCurrentlyPublished ? `[RASCUNHO] ${cleanTitle}` : cleanTitle;
+
       const { error } = await supabase
         .from("ebd_devotionals")
-        .update({ is_published: !currentStatus })
+        .update({ title: newTitle })
         .eq("id", id);
 
       if (error) throw error;
 
       toast({
         title: "Sucesso!",
-        description: !currentStatus ? "Devocional publicado" : "Devocional despublicado",
+        description: !isCurrentlyPublished ? "Devocional publicado" : "Devocional movido para rascunho",
       });
 
       loadHistory();
       if (isResultView && result && result.id === id) {
-        setResult({ ...result, is_published: !currentStatus });
+        setResult({ ...result, title: newTitle });
       }
     } catch (error: any) {
       toast({
@@ -72,7 +75,6 @@ export default function DevotionalAIPage() {
       });
     }
   };
-
 
   useEffect(() => {
     loadHistory();
@@ -105,23 +107,36 @@ export default function DevotionalAIPage() {
 
     setLoading(true);
     try {
+      // 1. Force delete today's entry first to ensure fresh generation (Frontend Workaround)
+      // This is crucial to bypass the backend upsert logic we couldn't deploy
+      const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+      await supabase.from("ebd_devotionals").delete().eq("day", todayKey);
+
+      // 2. Call Edge Function (will insert new record)
       const { data, error } = await supabase.functions.invoke("ebd-devotional", {
         body: {
           theme: theme,
           bible_book: bibleBook || undefined,
           tone: tone,
           length: 1200,
-          force_new: true, // Force generation with custom params
+          force_new: true,
         },
       });
 
       if (error) throw error;
 
-      setResult(data);
+      // 3. Mark as Draft immediately (Frontend Workaround)
+      // The function publishes it by default (saves to DB), so we catch it and rename it to [RASCUNHO]
+      const draftTitle = `[RASCUNHO] ${data.title}`;
+      await supabase.from("ebd_devotionals").update({ title: draftTitle }).eq("id", data.id);
+
+      const finalData = { ...data, title: draftTitle };
+
+      setResult(finalData);
       loadHistory(); // Refresh history
       toast({
         title: "Sucesso!",
-        description: "Devocional gerado com sucesso",
+        description: "Devocional gerado (modificado para Rascunho). Revise e publique.",
       });
     } catch (error: any) {
       console.error("Error generating devotional:", error);
@@ -349,12 +364,12 @@ export default function DevotionalAIPage() {
                       </Button>
 
                       <Button
-                        variant={result.is_published ? "secondary" : "default"}
-                        className={`flex-1 ${result.is_published ? "text-muted-foreground" : "bg-green-600 hover:bg-green-700 text-white"}`}
-                        onClick={() => handleTogglePublish(result.id, result.is_published, true)}
+                        variant={isPublished(result.title) ? "secondary" : "default"}
+                        className={`flex-1 ${isPublished(result.title) ? "text-muted-foreground" : "bg-green-600 hover:bg-green-700 text-white"}`}
+                        onClick={() => handleTogglePublish(result.id, result.title, true)}
                       >
                         <Sparkles className="mr-2 h-4 w-4" />
-                        {result.is_published ? "Ocultar" : "Publicar"}
+                        {isPublished(result.title) ? "Ocultar" : "Publicar"}
                       </Button>
 
                       <Button
@@ -396,9 +411,11 @@ export default function DevotionalAIPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{dev.title}</h4>
-                          {dev.is_published && (
+                          <h4 className="font-medium">{dev.title.replace(/\[RASCUNHO\]\s?/gi, "")}</h4>
+                          {isPublished(dev.title) ? (
                             <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Publicado</span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20">Rascunho</span>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
@@ -414,9 +431,9 @@ export default function DevotionalAIPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleTogglePublish(dev.id, dev.is_published)}
-                          title={dev.is_published ? "Ocultar" : "Publicar"}
-                          className={dev.is_published ? "text-muted-foreground" : "text-green-600"}
+                          onClick={() => handleTogglePublish(dev.id, dev.title)}
+                          title={isPublished(dev.title) ? "Ocultar" : "Publicar"}
+                          className={isPublished(dev.title) ? "text-muted-foreground" : "text-green-600"}
                         >
                           <Sparkles className="h-4 w-4" />
                         </Button>
