@@ -321,22 +321,25 @@ const Index = () => {
                       href={slide.link}
                       target={slide.link.startsWith("http") ? "_blank" : "_self"}
                       rel={slide.link.startsWith("http") ? "noopener noreferrer" : undefined}
-                      className="block relative overflow-hidden rounded-3xl border shadow-lift w-full aspect-video bg-background transition-all hover:ring-2 hover:ring-primary hover:opacity-95"
+                      href={slide.link}
+                      target={slide.link.startsWith("http") ? "_blank" : "_self"}
+                      rel={slide.link.startsWith("http") ? "noopener noreferrer" : undefined}
+                      className="block relative overflow-hidden rounded-3xl border shadow-lift w-full bg-background transition-all hover:ring-2 hover:ring-primary hover:opacity-95"
                     >
                       <img
                         src={slide.image_url}
                         alt={slide.alt_text}
                         loading="lazy"
-                        className="h-full w-full object-cover"
+                        className="w-full h-auto object-contain"
                       />
                     </a>
                   ) : (
-                    <div className="relative overflow-hidden rounded-3xl border shadow-lift w-full aspect-video bg-background">
+                    <div className="relative overflow-hidden rounded-3xl border shadow-lift w-full bg-background">
                       <img
                         src={slide.image_url}
                         alt={slide.alt_text}
                         loading="lazy"
-                        className="h-full w-full object-cover"
+                        className="w-full h-auto object-contain"
                       />
                     </div>
                   )}
