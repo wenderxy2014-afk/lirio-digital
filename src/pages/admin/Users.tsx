@@ -1,14 +1,14 @@
- import { SiteLayout } from "@/components/site/SiteLayout";
+import { SiteLayout } from "@/components/site/SiteLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
- import { 
-   Breadcrumb, 
-   BreadcrumbList, 
-   BreadcrumbItem, 
-   BreadcrumbLink,
-   BreadcrumbSeparator,
-   BreadcrumbPage 
- } from "@/components/ui/breadcrumb";
- import { Button } from "@/components/ui/button";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+  BreadcrumbPage
+} from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
 import { Users as UsersIcon, UserPlus, Loader2, Mail, Shield, CheckCircle2, XCircle, Pencil, Trash2 } from "lucide-react";
 import { useAdminUsers } from "@/data/queries";
 import { Badge } from "@/components/ui/badge";
@@ -41,8 +41,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
- 
- export default function UsersPage() {
+
+export default function UsersPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: adminUsers, isLoading } = useAdminUsers();
@@ -54,6 +54,14 @@ import {
     password: "",
     role: "editor" as "admin" | "editor",
   });
+
+  // Edit State
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [updating, setUpdating] = useState(false);
+
+  // Delete State
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,166 +100,337 @@ import {
     }
   };
 
-   return (
-     <SiteLayout>
-       <Breadcrumb className="mb-6">
-         <BreadcrumbList>
-           <BreadcrumbItem>
-             <BreadcrumbLink href="/admin">Admin</BreadcrumbLink>
-           </BreadcrumbItem>
-           <BreadcrumbSeparator />
-           <BreadcrumbItem>
-             <BreadcrumbPage>Usuários e Permissões</BreadcrumbPage>
-           </BreadcrumbItem>
-         </BreadcrumbList>
-       </Breadcrumb>
- 
-       <header className="flex items-center justify-between mb-6">
-         <div>
-           <h1 className="font-display text-3xl flex items-center gap-2">
-             <UsersIcon className="h-8 w-8" />
-             Usuários Administrativos
-           </h1>
-           <p className="mt-2 text-muted-foreground">
-             Gerencie usuários e suas permissões de acesso
-           </p>
-         </div>
-          <Button onClick={() => setCreateDialogOpen(true)}>
-           <UserPlus className="mr-2 h-4 w-4" />
-           Novo Usuário
-         </Button>
-       </header>
- 
-       <Card>
-         <CardHeader>
-            <CardTitle>Usuários Administrativos</CardTitle>
-            <CardDescription>
-              {adminUsers?.length || 0} usuário(s) cadastrado(s)
-            </CardDescription>
-         </CardHeader>
-         <CardContent>
-            {isLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            ) : adminUsers && adminUsers.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>E-mail</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Criado em</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {adminUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">
-                        {user.full_name || "Sem nome"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          {user.email}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {user.is_active ? (
-                          <Badge variant="default" className="flex w-fit items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Ativo
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="flex w-fit items-center gap-1">
-                            <XCircle className="h-3 w-3" />
-                            Inativo
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(user.created_at!).toLocaleDateString("pt-BR")}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="sm">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
+  const handleEditClick = (user: any) => {
+    setEditingUser({
+      ...user,
+      role: user.role || "editor" // Ensure role exists or default
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setUpdating(true);
+
+    try {
+      const { error } = await supabase
+        .from("admin_users")
+        .update({
+          full_name: editingUser.full_name,
+          role: editingUser.role,
+        })
+        .eq("id", editingUser.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Usuário atualizado!",
+        description: "As informações foram salvas com sucesso.",
+      });
+
+      setEditDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDeleteClick = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.")) return;
+
+    setDeletingId(id);
+    try {
+      // Note: This only deletes from admin_users. 
+      // Ideally, an Edge Function should be used to delete from auth.users as well.
+      const { error } = await supabase
+        .from("admin_users")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Usuário excluído",
+        description: "O registro foi removido com sucesso.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  return (
+    <SiteLayout>
+      <Breadcrumb className="mb-6">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/admin">Admin</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Usuários e Permissões</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <header className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-display text-3xl flex items-center gap-2">
+            <UsersIcon className="h-8 w-8" />
+            Usuários Administrativos
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Gerencie usuários e suas permissões de acesso
+          </p>
+        </div>
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Novo Usuário
+        </Button>
+      </header>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Usuários Administrativos</CardTitle>
+          <CardDescription>
+            {adminUsers?.length || 0} usuário(s) cadastrado(s)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : adminUsers && adminUsers.length > 0 ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>E-mail</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Criado em</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {adminUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      {user.full_name || "Sem nome"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        {user.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {user.is_active ? (
+                        <Badge variant="default" className="flex w-fit items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Ativo
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="flex w-fit items-center gap-1">
+                          <XCircle className="h-3 w-3" />
+                          Inativo
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(user.created_at!).toLocaleDateString("pt-BR")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditClick(user)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteClick(user.id)}
+                          disabled={deletingId === user.id}
+                        >
+                          {deletingId === user.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
                             <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-12">
-                <UsersIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-sm text-muted-foreground">
-                  Nenhum usuário cadastrado ainda
-                </p>
-              </div>
-            )}
-         </CardContent>
-       </Card>
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div className="text-center py-12">
+              <UsersIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-sm text-muted-foreground">
+                Nenhum usuário cadastrado ainda
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Criar Novo Usuário</DialogTitle>
-              <DialogDescription>
-                Adicione um novo administrador ou editor ao sistema
-              </DialogDescription>
-            </DialogHeader>
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Criar Novo Usuário</DialogTitle>
+            <DialogDescription>
+              Adicione um novo administrador ou editor ao sistema
+            </DialogDescription>
+          </DialogHeader>
 
-            <form onSubmit={handleCreateUser} className="space-y-4">
+          <form onSubmit={handleCreateUser} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-full-name">Nome Completo</Label>
+              <Input
+                id="new-full-name"
+                value={newUserForm.fullName}
+                onChange={(e) => setNewUserForm({ ...newUserForm, fullName: e.target.value })}
+                placeholder="João Silva"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-email">E-mail</Label>
+              <Input
+                id="new-email"
+                type="email"
+                value={newUserForm.email}
+                onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                placeholder="joao@igreja.com"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Senha Temporária</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newUserForm.password}
+                onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+              <p className="text-xs text-muted-foreground">
+                O usuário receberá um e-mail para redefinir a senha
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-role">Função</Label>
+              <Select
+                value={newUserForm.role}
+                onValueChange={(value) => setNewUserForm({ ...newUserForm, role: value as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Administrador (acesso total)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="editor">
+                    <div className="flex items-center gap-2">
+                      <Pencil className="h-4 w-4" />
+                      Editor (permissões limitadas)
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCreateDialogOpen(false)}
+                disabled={creating}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={creating}>
+                {creating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Criar Usuário
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogDescription>
+              Atualize as informações do usuário
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingUser && (
+            <form onSubmit={handleUpdateUser} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-full-name">Nome Completo</Label>
+                <Label htmlFor="edit-full-name">Nome Completo</Label>
                 <Input
-                  id="new-full-name"
-                  value={newUserForm.fullName}
-                  onChange={(e) => setNewUserForm({ ...newUserForm, fullName: e.target.value })}
-                  placeholder="João Silva"
+                  id="edit-full-name"
+                  value={editingUser.full_name}
+                  onChange={(e) => setEditingUser({ ...editingUser, full_name: e.target.value })}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="new-email">E-mail</Label>
+                <Label htmlFor="edit-email">E-mail</Label>
                 <Input
-                  id="new-email"
-                  type="email"
-                  value={newUserForm.email}
-                  onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
-                  placeholder="joao@igreja.com"
-                  required
+                  id="edit-email"
+                  value={editingUser.email}
+                  disabled
+                  className="bg-slate-100 text-slate-500"
                 />
+                <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado aqui.</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="new-password">Senha Temporária</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  value={newUserForm.password}
-                  onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                />
-                <p className="text-xs text-muted-foreground">
-                  O usuário receberá um e-mail para redefinir a senha
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="new-role">Função</Label>
+                <Label htmlFor="edit-role">Função</Label>
                 <Select
-                  value={newUserForm.role}
-                  onValueChange={(value) => setNewUserForm({ ...newUserForm, role: value as any })}
+                  value={editingUser.role}
+                  onValueChange={(value) => setEditingUser({ ...editingUser, role: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -260,13 +439,13 @@ import {
                     <SelectItem value="admin">
                       <div className="flex items-center gap-2">
                         <Shield className="h-4 w-4" />
-                        Administrador (acesso total)
+                        Administrador
                       </div>
                     </SelectItem>
                     <SelectItem value="editor">
                       <div className="flex items-center gap-2">
                         <Pencil className="h-4 w-4" />
-                        Editor (permissões limitadas)
+                        Editor
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -277,28 +456,26 @@ import {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setCreateDialogOpen(false)}
-                  disabled={creating}
+                  onClick={() => setEditDialogOpen(false)}
+                  disabled={updating}
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={creating}>
-                  {creating ? (
+                <Button type="submit" disabled={updating}>
+                  {updating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Criando...
+                      Salvando...
                     </>
                   ) : (
-                    <>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Criar Usuário
-                    </>
+                    "Salvar Alterações"
                   )}
                 </Button>
               </DialogFooter>
             </form>
-          </DialogContent>
-        </Dialog>
-     </SiteLayout>
-   );
- }
+          )}
+        </DialogContent>
+      </Dialog>
+    </SiteLayout >
+  );
+}
