@@ -310,66 +310,6 @@ export default function UsersPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Nenhum usuário cadastrado ainda
               </p>
-              {(!adminUsers || adminUsers.length === 0) && (
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    if (!user) return;
-                    try {
-                      // 1. Sync admin_users (PK is id)
-                      const { error: userError } = await supabase.from("admin_users").upsert({
-                        id: user.id, // Primary Key matches auth.users.id
-                        email: user.email,
-                        full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
-                        created_at: new Date().toISOString(),
-                        is_active: true
-                      });
-
-                      if (userError) throw userError;
-
-                      // 2. Sync user_roles (Check if exists first to avoid constraint errors)
-                      const { data: existingRole } = await supabase
-                        .from("user_roles")
-                        .select("id")
-                        .eq("user_id", user.id)
-                        .maybeSingle();
-
-                      if (existingRole) {
-                        // Update existing role
-                        const { error: roleError } = await supabase
-                          .from("user_roles")
-                          .update({ role: "admin" })
-                          .eq("id", existingRole.id);
-                        if (roleError) throw roleError;
-                      } else {
-                        // Insert new role
-                        const { error: roleError } = await supabase
-                          .from("user_roles")
-                          .insert({
-                            user_id: user.id,
-                            role: "admin"
-                          });
-                        if (roleError) throw roleError;
-                      }
-
-                      toast({
-                        title: "Usuário Sincronizado",
-                        description: "Você foi adicionado à lista de administradores.",
-                      });
-                      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
-                    } catch (error: any) {
-                      console.error("Sync error:", error);
-                      toast({
-                        title: "Erro ao sincronizar",
-                        description: error.message,
-                        variant: "destructive"
-                      });
-                    }
-                  }}
-                >
-                  Sincronizar meu Usuário
-                </Button>
-              )}
             </div>
           )}
         </CardContent>
