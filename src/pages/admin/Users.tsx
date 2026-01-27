@@ -316,23 +316,41 @@ export default function UsersPage() {
                   onClick={async () => {
                     if (!user) return;
                     try {
-                      // Fix: user_id is required, id might be optional or auto-generated
+                      // 1. Sync admin_users (PK is id)
                       const { error: userError } = await supabase.from("admin_users").upsert({
-                        user_id: user.id,
+                        id: user.id, // Primary Key matches auth.users.id
                         email: user.email,
                         full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
                         created_at: new Date().toISOString(),
                         is_active: true
-                      }, { onConflict: 'user_id' }); // Assume user_id is the unique key to match on upsert
+                      });
 
                       if (userError) throw userError;
 
-                      const { error: roleError } = await supabase.from("user_roles").upsert({
-                        user_id: user.id,
-                        role: "admin"
-                      }, { onConflict: 'user_id' });
+                      // 2. Sync user_roles (Check if exists first to avoid constraint errors)
+                      const { data: existingRole } = await supabase
+                        .from("user_roles")
+                        .select("id")
+                        .eq("user_id", user.id)
+                        .maybeSingle();
 
-                      if (roleError) throw roleError;
+                      if (existingRole) {
+                        // Update existing role
+                        const { error: roleError } = await supabase
+                          .from("user_roles")
+                          .update({ role: "admin" })
+                          .eq("id", existingRole.id);
+                        if (roleError) throw roleError;
+                      } else {
+                        // Insert new role
+                        const { error: roleError } = await supabase
+                          .from("user_roles")
+                          .insert({
+                            user_id: user.id,
+                            role: "admin"
+                          });
+                        if (roleError) throw roleError;
+                      }
 
                       toast({
                         title: "Usuário Sincronizado",
