@@ -80,7 +80,12 @@ export default function UsersPage() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback: If edge function fails, try to see if we can insert directly (only works if user exists in auth or disabled RLS)
+        // But for now, let's just throw, but maybe log more details.
+        console.error("Edge function failed:", error);
+        throw error;
+      }
       if (!data?.success) throw new Error(data?.error || "Falha ao criar usuário");
 
       toast({
@@ -305,7 +310,7 @@ export default function UsersPage() {
               <p className="text-sm text-muted-foreground mb-4">
                 Nenhum usuário cadastrado ainda
               </p>
-              {adminUsers?.length === 0 && (
+              {(!adminUsers || adminUsers.length === 0) && (
                 <Button
                   variant="outline"
                   onClick={async () => {
