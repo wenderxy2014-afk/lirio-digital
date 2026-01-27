@@ -152,10 +152,18 @@ export default function HomeCMSPage() {
 
   const resolveAsset = (url: string) => {
     if (!url) return "";
+
+    // 1. Check strict map match
     if (assetMap[url]) return assetMap[url];
-    // Also try removing leading slashes or paths if simple match fails
+
+    // 2. Check filename match (e.g. 'banner-familia.png' from '/src/assets/banner-familia.png')
     const filename = url.split('/').pop();
     if (filename && assetMap[filename]) return assetMap[filename];
+
+    // 3. If it is a full URL (http/https), return as is
+    if (url.startsWith('http') || url.startsWith('blob:')) return url;
+
+    // 4. Default: Return original. Ideally this should be a valid URL.
     return url;
   };
 

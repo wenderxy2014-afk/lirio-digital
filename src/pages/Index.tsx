@@ -78,12 +78,18 @@ const Index = () => {
   const resolvedCarouselData = carouselData.map((slide: any) => {
     const imageUrl = slide.image_url;
 
-    // If it's a local asset path, resolve it from the map
-    if (imageUrl && assetMap[imageUrl]) {
+    if (!imageUrl) return slide;
+
+    // 1. Check Asset Map (Local Imports)
+    const filename = imageUrl.split('/').pop();
+    if (assetMap[imageUrl]) {
       return { ...slide, image_url: assetMap[imageUrl] };
     }
+    if (filename && assetMap[filename]) {
+      return { ...slide, image_url: assetMap[filename] };
+    }
 
-    // If it's already a full URL (from Supabase Storage), use as-is
+    // 2. Return original (Full URLs or Unmapped paths)
     return slide;
   });
 
@@ -318,9 +324,6 @@ const Index = () => {
                 <CarouselItem key={index}>
                   {slide.link ? (
                     <a
-                      href={slide.link}
-                      target={slide.link.startsWith("http") ? "_blank" : "_self"}
-                      rel={slide.link.startsWith("http") ? "noopener noreferrer" : undefined}
                       href={slide.link}
                       target={slide.link.startsWith("http") ? "_blank" : "_self"}
                       rel={slide.link.startsWith("http") ? "noopener noreferrer" : undefined}
