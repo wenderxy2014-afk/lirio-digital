@@ -1,4 +1,5 @@
 import { SiteLayout } from "@/components/site/SiteLayout";
+import { useAuth } from "@/providers/AuthProvider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Breadcrumb,
@@ -43,6 +44,7 @@ import {
 } from "@/components/ui/table";
 
 export default function UsersPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: adminUsers, isLoading } = useAdminUsers();
@@ -300,9 +302,51 @@ export default function UsersPage() {
           ) : (
             <div className="text-center py-12">
               <UsersIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground mb-4">
                 Nenhum usuário cadastrado ainda
               </p>
+              {adminUsers?.length === 0 && (
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    if (!user) return;
+                    try {
+                      // Fix: user_id is required, id might be optional or auto-generated
+                      const { error: userError } = await supabase.from("admin_users").upsert({
+                        user_id: user.id,
+                        email: user.email,
+                        full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+                        created_at: new Date().toISOString(),
+                        is_active: true
+                      }, { onConflict: 'user_id' }); // Assume user_id is the unique key to match on upsert
+
+                      if (userError) throw userError;
+
+                      const { error: roleError } = await supabase.from("user_roles").upsert({
+                        user_id: user.id,
+                        role: "admin"
+                      }, { onConflict: 'user_id' });
+
+                      if (roleError) throw roleError;
+
+                      toast({
+                        title: "Usuário Sincronizado",
+                        description: "Você foi adicionado à lista de administradores.",
+                      });
+                      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+                    } catch (error: any) {
+                      console.error("Sync error:", error);
+                      toast({
+                        title: "Erro ao sincronizar",
+                        description: error.message,
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                >
+                  Sincronizar meu Usuário
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
