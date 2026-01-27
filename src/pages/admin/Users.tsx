@@ -319,6 +319,7 @@ export default function UsersPage() {
                       // 1. Sync admin_users (PK is id)
                       const { error: userError } = await supabase.from("admin_users").upsert({
                         id: user.id, // Primary Key matches auth.users.id
+                        user_id: user.id,
                         email: user.email,
                         full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
                         created_at: new Date().toISOString(),
