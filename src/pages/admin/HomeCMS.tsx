@@ -495,6 +495,9 @@ export default function HomeCMSPage() {
                         }}
                         folder="carousel"
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Recomendado: 1280 x 720 px (Full HD)
+                      </p>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
