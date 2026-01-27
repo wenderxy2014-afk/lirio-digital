@@ -114,15 +114,31 @@ export default function UsersPage() {
     setUpdating(true);
 
     try {
-      const { error } = await supabase
+      // 1. Update Name in admin_users
+      const { error: userError } = await supabase
         .from("admin_users")
         .update({
           full_name: editingUser.full_name,
-          role: editingUser.role,
         })
         .eq("id", editingUser.id);
 
-      if (error) throw error;
+      if (userError) throw userError;
+
+      // 2. Update Role in user_roles
+      // Check if role exists for this user, if not insert, if yes update
+      // But typically for admin users created via flow, they should have a role.
+      // We'll try upsert or just update. Since we don't have the role ID here easily (unless we fetch it),
+      // we can update by user_id. user_roles has a unique constraint on user_id probably?
+      // Let's assume one role per user for now as per app logic.
+
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .upsert({
+          user_id: editingUser.user_id,
+          role: editingUser.role
+        }, { onConflict: 'user_id' }); // Assuming user_id is unique or PK
+
+      if (roleError) throw roleError;
 
       toast({
         title: "Usuário atualizado!",
@@ -132,9 +148,10 @@ export default function UsersPage() {
       setEditDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["admin_users"] });
     } catch (error: any) {
+      console.error("Update error:", error);
       toast({
         title: "Erro ao atualizar",
-        description: error.message,
+        description: error.message || "Erro desconhecido",
         variant: "destructive",
       });
     } finally {

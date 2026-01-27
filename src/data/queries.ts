@@ -79,10 +79,15 @@ export function useAdminUsers() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("admin_users")
-        .select("*")
+        .select("*, user_roles(role)")
         .order("created_at", { ascending: false });
+
       if (error) throw error;
-      return data ?? [];
+
+      return data.map((user: any) => ({
+        ...user,
+        role: user.user_roles?.[0]?.role || "editor" // Default to editor if no role found
+      }));
     },
   });
 }
