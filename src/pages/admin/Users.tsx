@@ -308,57 +308,41 @@ export default function UsersPage() {
                   size="sm"
                   className="w-full"
                   onClick={async () => {
-                    if (!user?.email) return;
-                    toast({ title: "Iniciando reparo...", description: "Tentando métodos de recuperação..." });
-
                     try {
-                      // Tentativa 1: Via Edge Function
-                      const { data, error } = await supabase.functions.invoke('fix-admin-access', {
-                        body: { email: user.email }
-                      });
+                      // TENTATIVA MESTRA: RPC SECURITY DEFINER
+                      // Essa chamada invoca uma função no banco que roda como Superadmin
+                      const { data, error } = await supabase.rpc('rpc_fix_my_admin');
 
                       if (error) throw error;
+                      const result = data as any;
 
-                      if (data.success) {
-                        toast({ title: "Sucesso!", description: "Acesso restaurado. Recarregando..." });
+                      if (result.success) {
+                        toast({
+                          title: "Acesso Restaurado!",
+                          description: "Permissões corrigidas no banco de dados. Atualizando...",
+                          className: "bg-green-600 text-white border-none"
+                        });
                         queryClient.invalidateQueries({ queryKey: ["admin_users"] });
-                        setTimeout(() => window.location.reload(), 1500);
+                        setTimeout(() => window.location.reload(), 1000);
+                        return;
+                      } else {
+                        throw new Error(result.error);
                       }
                     } catch (funcError: any) {
-                      console.warn("Edge attempt failed, trying direct:", funcError);
+                      console.error("RPC failed", funcError);
 
-                      try {
-                        // Tentativa 2: Direct Insert
-                        await supabase.from("user_roles").upsert({
-                          user_id: user.id,
-                          role: "admin"
-                        }, { onConflict: "user_id,role" });
-
-                        const { error: directError } = await supabase.from("admin_users").upsert({
-                          user_id: user.id,
-                          email: user.email,
-                          full_name: "Admin Recuperado",
-                          is_active: true
-                        }, { onConflict: "user_id" });
-
-                        if (directError) throw directError;
-
-                        toast({ title: "Sucesso!", description: "Dados restaurados manualmente." });
-                        setTimeout(() => window.location.reload(), 1500);
-
-                      } catch (finalError) {
-                        toast({
-                          title: "Falha Automática",
-                          description: "Bloqueio de segurança ativo. Use a correção manual.",
-                          variant: "destructive"
-                        });
-                        setShowManualHelp(true);
-                      }
+                      // Fallback para o Dialog Manual se o RPC falhar (ex: migration não rodou ainda)
+                      toast({
+                        title: "Falha na Automação",
+                        description: "O sistema não conseguiu se corrigir sozinho. Use a opção manual abaixo.",
+                        variant: "destructive"
+                      });
+                      setShowManualHelp(true);
                     }
                   }}
                 >
                   <Shield className="mr-2 h-3 w-3" />
-                  Tentar Reparo Automático
+                  Reparar Acesso (Método RPC)
                 </Button>
 
                 <Button
@@ -367,7 +351,7 @@ export default function UsersPage() {
                   className="w-full text-xs"
                   onClick={() => setShowManualHelp(true)}
                 >
-                  Solução Manual (Garantida)
+                  Solução Manual (SQL)
                 </Button>
               </div>
             )}
