@@ -77,16 +77,37 @@ export function useAdminUsers() {
   return useQuery({
     queryKey: ["admin_users"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // NOTE: There's no FK relationship between admin_users and user_roles in the backend schema,
+      // so PostgREST can't do `user_roles(role)` embedding. We fetch in two steps and merge.
+      const { data: admins, error: adminsError } = await supabase
         .from("admin_users")
-        .select("*, user_roles(role)")
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (adminsError) throw adminsError;
+      const list = admins ?? [];
 
-      return data.map((user: any) => ({
-        ...user,
-        role: user.user_roles?.[0]?.role || "editor" // Default to editor if no role found
+      const userIds = Array.from(new Set(list.map((u: any) => u.user_id).filter(Boolean)));
+      if (userIds.length === 0) {
+        return list.map((u: any) => ({ ...u, role: "editor" }));
+      }
+
+      const { data: roles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("user_id,role")
+        .in("user_id", userIds);
+
+      if (rolesError) throw rolesError;
+
+      const roleByUserId = new Map<string, string>();
+      (roles ?? []).forEach((r: any) => {
+        // One role per user in this app; if multiple exist, keep the first.
+        if (!roleByUserId.has(r.user_id)) roleByUserId.set(r.user_id, r.role);
+      });
+
+      return list.map((u: any) => ({
+        ...u,
+        role: roleByUserId.get(u.user_id) || "editor",
       }));
     },
   });
