@@ -10,7 +10,7 @@ import {
   BreadcrumbPage
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { Users as UsersIcon, UserPlus, Loader2, Mail, Shield, CheckCircle2, XCircle, Pencil, Trash2 } from "lucide-react";
+import { Users as UsersIcon, UserPlus, Loader2, Mail, Shield, CheckCircle2, XCircle, Pencil, Trash2, ShieldCheck } from "lucide-react";
 import { useAdminUsers } from "@/data/queries";
 import { Badge } from "@/components/ui/badge";
 import { useState, useEffect } from "react";
@@ -286,6 +286,18 @@ export default function UsersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/25">
+            <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-primary" /> Diagnóstico de Acesso
+            </h3>
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p><strong>Usuário Logado:</strong> {user?.email || "Não identificado"}</p>
+              <p><strong>ID:</strong> {user?.id}</p>
+              <p><strong>Total Carregado:</strong> {adminUsers?.length || 0} registros</p>
+              <p><strong>Status Carregamento:</strong> {isLoading ? "Carregando..." : "Concluído"}</p>
+            </div>
+          </div>
+
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
