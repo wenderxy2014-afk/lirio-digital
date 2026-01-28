@@ -57,6 +57,9 @@ export default function UsersPage() {
     role: "editor" as "admin" | "editor",
   });
 
+  // Manual SQL Fix Dialog State
+  const [showManualHelp, setShowManualHelp] = useState(false);
+
   // Edit State
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
@@ -291,9 +294,7 @@ export default function UsersPage() {
               <ShieldCheck className="w-4 h-4 text-primary" /> Diagnóstico de Acesso
             </h3>
             {/* Manual SQL Fix Dialog State */}
-            const [showManualHelp, setShowManualHelp] = useState(false);
 
-            {/* ... (rest of the component) */}
 
             <div className="text-xs text-muted-foreground space-y-1">
               <p><strong>Usuário Logado:</strong> {user?.email || "Não identificado"}</p>
