@@ -14,6 +14,13 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// SUPER ADMIN WHITELIST (Acesso Garantido)
+const SUPER_ADMINS = [
+  "wenderxy@outlook.com.br",
+  "wenderxy2014@gmail.com",
+  "ricardo@igreja.com" // Adicione outros se precisar
+];
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -26,19 +33,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(newSession?.user ?? null);
 
       if (newSession?.user) {
-        setTimeout(() => {
-          (async () => {
-            try {
-              const { data } = await supabase
-                .from("user_roles")
-                .select("role")
-                .eq("user_id", newSession.user.id);
-              setRoles((data?.map((r) => r.role) as AppRole[]) ?? []);
-            } catch {
-              setRoles([]);
-            }
-          })();
-        }, 0);
+        // Check Whitelist first (Instant Acess)
+        const email = newSession.user.email;
+        if (email && SUPER_ADMINS.some(admin => email.toLowerCase().includes(admin.toLowerCase()))) {
+          console.log("💎 Super Admin Access Granted to:", email);
+          setRoles(['admin', 'editor']); // Force roles
+        } else {
+          // Normal DB Check
+          setTimeout(() => {
+            (async () => {
+              try {
+                const { data } = await supabase
+                  .from("user_roles")
+                  .select("role")
+                  .eq("user_id", newSession.user.id);
+                setRoles((data?.map((r) => r.role) as AppRole[]) ?? []);
+              } catch {
+                setRoles([]);
+              }
+            })();
+          }, 0);
+        }
       } else {
         setRoles([]);
       }
@@ -49,12 +64,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(({ data: { session: existingSession } }) => {
         setSession(existingSession);
         setUser(existingSession?.user ?? null);
+
         if (existingSession?.user) {
-          return supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", existingSession.user.id)
-            .then(({ data }) => setRoles((data?.map((r) => r.role) as AppRole[]) ?? []));
+          const email = existingSession.user.email;
+
+          // Check Whitelist on Load
+          if (email && SUPER_ADMINS.some(admin => email.toLowerCase().includes(admin.toLowerCase()))) {
+            console.log("💎 Super Admin Access Restored (Load):", email);
+            setRoles(['admin', 'editor']);
+          } else {
+            return supabase
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", existingSession.user.id)
+              .then(({ data }) => setRoles((data?.map((r) => r.role) as AppRole[]) ?? []));
+          }
         }
       })
       .finally(() => setLoading(false));
@@ -74,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(null);
           setUser(null);
           setRoles([]);
-          
+
           // Sign out from Supabase with scope 'local' to clear session from storage
           await supabase.auth.signOut({ scope: 'local' });
         } catch (error) {
