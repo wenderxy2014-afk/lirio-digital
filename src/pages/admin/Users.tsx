@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/table";
 
 export default function UsersPage() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: adminUsers, isLoading } = useAdminUsers();
@@ -57,8 +57,7 @@ export default function UsersPage() {
     role: "editor" as "admin" | "editor",
   });
 
-  // Manual SQL Fix Dialog State
-  const [showManualHelp, setShowManualHelp] = useState(false);
+  const isAdmin = roles?.includes("admin");
 
   // Edit State
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -120,8 +119,33 @@ export default function UsersPage() {
     syncUsers();
   }, [queryClient, toast]);
 
+  const parseFunctionInvokeError = async (err: any) => {
+    // supabase.functions.invoke errors are often FunctionsHttpError with a Response in `context`
+    try {
+      const maybeResponse = err?.context;
+      if (maybeResponse && typeof maybeResponse.json === "function") {
+        const body = await maybeResponse.json().catch(() => null);
+        const message = body?.error || body?.message;
+        if (message) return String(message);
+      }
+    } catch {
+      // ignore
+    }
+    return String(err?.message || "Erro desconhecido");
+  };
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isAdmin) {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas administradores podem criar novos usuários.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setCreating(true);
 
     try {
@@ -136,10 +160,8 @@ export default function UsersPage() {
       });
 
       if (error) {
-        // Fallback: If edge function fails, try to see if we can insert directly (only works if user exists in auth or disabled RLS)
-        // But for now, let's just throw, but maybe log more details.
         console.error("Edge function failed:", error);
-        throw error;
+        throw new Error(await parseFunctionInvokeError(error));
       }
       if (!data?.success) throw new Error(data?.error || "Falha ao criar usuário");
 
@@ -163,6 +185,14 @@ export default function UsersPage() {
   };
 
   const handleEditClick = (user: any) => {
+    if (!isAdmin) {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas administradores podem editar usuários.",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditingUser({
       ...user,
       role: user.role || "editor" // Ensure role exists or default
@@ -173,6 +203,16 @@ export default function UsersPage() {
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
+
+    if (!isAdmin) {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas administradores podem salvar alterações.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setUpdating(true);
 
     try {
@@ -187,20 +227,18 @@ export default function UsersPage() {
       if (userError) throw userError;
 
       // 2. Update Role in user_roles
-      // Check if role exists for this user, if not insert, if yes update
-      // But typically for admin users created via flow, they should have a role.
-      // We'll try upsert or just update. Since we don't have the role ID here easily (unless we fetch it),
-      // we can update by user_id. user_roles has a unique constraint on user_id probably?
-      // Let's assume one role per user for now as per app logic.
-
-      const { error: roleError } = await supabase
+      // Our app uses one role per admin/editor user.
+      // user_roles is unique by (user_id, role), not by user_id, so we replace existing roles.
+      const { error: deleteRolesError } = await supabase
         .from("user_roles")
-        .upsert({
-          user_id: editingUser.user_id,
-          role: editingUser.role
-        }, { onConflict: 'user_id' }); // Assuming user_id is unique or PK
+        .delete()
+        .eq("user_id", editingUser.user_id);
+      if (deleteRolesError) throw deleteRolesError;
 
-      if (roleError) throw roleError;
+      const { error: insertRoleError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: editingUser.user_id, role: editingUser.role });
+      if (insertRoleError) throw insertRoleError;
 
       toast({
         title: "Usuário atualizado!",
@@ -222,6 +260,15 @@ export default function UsersPage() {
   };
 
   const handleDeleteClick = async (id: string) => {
+    if (!isAdmin) {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas administradores podem excluir usuários.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!confirm("Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.")) return;
 
     setDeletingId(id);
@@ -275,7 +322,7 @@ export default function UsersPage() {
             Gerencie usuários e suas permissões de acesso
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => setCreateDialogOpen(true)} disabled={!isAdmin}>
           <UserPlus className="mr-2 h-4 w-4" />
           Novo Usuário
         </Button>
@@ -293,69 +340,12 @@ export default function UsersPage() {
             <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-primary" /> Diagnóstico de Acesso
             </h3>
-            {/* Manual SQL Fix Dialog State */}
-
-
             <div className="text-xs text-muted-foreground space-y-1">
               <p><strong>Usuário Logado:</strong> {user?.email || "Não identificado"}</p>
               <p><strong>ID:</strong> {user?.id}</p>
               <p><strong>Total Carregado:</strong> {adminUsers?.length || 0} registros</p>
               <p><strong>Status Carregamento:</strong> {isLoading ? "Carregando..." : "Concluído"}</p>
             </div>
-            {(!adminUsers || adminUsers.length === 0) && (
-              <div className="mt-4 space-y-2">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="w-full"
-                  onClick={async () => {
-                    try {
-                      // TENTATIVA MESTRA: RPC SECURITY DEFINER
-                      // Essa chamada invoca uma função no banco que roda como Superadmin
-                      const { data, error } = await supabase.rpc('rpc_fix_my_admin');
-
-                      if (error) throw error;
-                      const result = data as any;
-
-                      if (result.success) {
-                        toast({
-                          title: "Acesso Restaurado!",
-                          description: "Permissões corrigidas no banco de dados. Atualizando...",
-                          className: "bg-green-600 text-white border-none"
-                        });
-                        queryClient.invalidateQueries({ queryKey: ["admin_users"] });
-                        setTimeout(() => window.location.reload(), 1000);
-                        return;
-                      } else {
-                        throw new Error(result.error);
-                      }
-                    } catch (funcError: any) {
-                      console.error("RPC failed", funcError);
-
-                      // Fallback para o Dialog Manual se o RPC falhar (ex: migration não rodou ainda)
-                      toast({
-                        title: "Falha na Automação",
-                        description: "O sistema não conseguiu se corrigir sozinho. Use a opção manual abaixo.",
-                        variant: "destructive"
-                      });
-                      setShowManualHelp(true);
-                    }
-                  }}
-                >
-                  <Shield className="mr-2 h-3 w-3" />
-                  Reparar Acesso (Método RPC)
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => setShowManualHelp(true)}
-                >
-                  Solução Manual (SQL)
-                </Button>
-              </div>
-            )}
           </div>
 
           {isLoading ? (
@@ -407,6 +397,7 @@ export default function UsersPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEditClick(user)}
+                          disabled={!isAdmin}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -414,7 +405,7 @@ export default function UsersPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteClick(user.id)}
-                          disabled={deletingId === user.id}
+                          disabled={!isAdmin || deletingId === user.id}
                         >
                           {deletingId === user.id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -569,7 +560,7 @@ export default function UsersPage() {
                   id="edit-email"
                   value={editingUser.email}
                   disabled
-                  className="bg-slate-100 text-slate-500"
+                  className="bg-muted text-muted-foreground"
                 />
                 <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado aqui.</p>
               </div>
