@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Users as UsersIcon, UserPlus, Loader2, Mail, Shield, CheckCircle2, XCircle, Pencil, Trash2 } from "lucide-react";
 import { useAdminUsers } from "@/data/queries";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -61,9 +61,61 @@ export default function UsersPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [updating, setUpdating] = useState(false);
-
   // Delete State
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Auto-sync legacy users (Migration Fix)
+  useEffect(() => {
+    const syncUsers = async () => {
+      // 1. Fetch Profiles with Roles (Legacy Source)
+      const { data: legacyAdmins, error: legacyError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email, created_at, user_roles!inner(role)')
+        .in('user_roles.role', ['admin', 'editor']);
+
+      if (legacyError || !legacyAdmins || legacyAdmins.length === 0) return;
+
+      // 2. Fetch Current Admin Users Table (New Source)
+      const { data: currentAdmins, error: currError } = await supabase
+        .from('admin_users')
+        .select('user_id');
+
+      if (currError) return;
+
+      const currentIds = new Set(currentAdmins?.map(u => u.user_id) || []);
+
+      // 3. Identify missing users
+      const toInsert = legacyAdmins
+        .filter(p => !currentIds.has(p.user_id))
+        .map(p => ({
+          user_id: p.user_id,
+          full_name: p.full_name || 'Usuário Recuperado',
+          email: p.email,
+          is_active: true,
+          created_at: p.created_at
+        }));
+
+      // 4. Insert missing users
+      if (toInsert.length > 0) {
+        console.log("Syncing legacy admins...", toInsert.length);
+        const { error: insertError } = await supabase
+          .from('admin_users')
+          .insert(toInsert);
+
+        if (!insertError) {
+          toast({
+            title: "Sistema Atualizado",
+            description: `${toInsert.length} usuários antigos foram restaurados para a nova lista.`,
+          });
+          queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+        } else {
+          console.error("Error syncing users:", insertError);
+        }
+      }
+    };
+
+    syncUsers();
+  }, [queryClient, toast]);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
