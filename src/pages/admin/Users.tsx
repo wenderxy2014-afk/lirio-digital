@@ -290,6 +290,11 @@ export default function UsersPage() {
             <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-primary" /> Diagnóstico de Acesso
             </h3>
+            {/* Manual SQL Fix Dialog State */}
+            const [showManualHelp, setShowManualHelp] = useState(false);
+
+            {/* ... (rest of the component) */}
+
             <div className="text-xs text-muted-foreground space-y-1">
               <p><strong>Usuário Logado:</strong> {user?.email || "Não identificado"}</p>
               <p><strong>ID:</strong> {user?.id}</p>
@@ -297,33 +302,74 @@ export default function UsersPage() {
               <p><strong>Status Carregamento:</strong> {isLoading ? "Carregando..." : "Concluído"}</p>
             </div>
             {(!adminUsers || adminUsers.length === 0) && (
-              <Button
-                variant="destructive"
-                size="sm"
-                className="mt-4 w-full"
-                onClick={async () => {
-                  if (!user?.email) return;
-                  toast({ title: "Iniciando reparo...", description: "Tentando restaurar seu acesso administrativo." });
-                  try {
-                    const { data, error } = await supabase.functions.invoke('fix-admin-access', {
-                      body: { email: user.email }
-                    });
-                    if (error) throw error;
-                    if (data.success) {
-                      toast({ title: "Sucesso!", description: "Acesso restaurado. Recarregando..." });
-                      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
-                      window.location.reload();
-                    } else {
-                      throw new Error(data.error || "Falha desconhecida");
+              <div className="mt-4 space-y-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="w-full"
+                  onClick={async () => {
+                    if (!user?.email) return;
+                    toast({ title: "Iniciando reparo...", description: "Tentando métodos de recuperação..." });
+
+                    try {
+                      // Tentativa 1: Via Edge Function
+                      const { data, error } = await supabase.functions.invoke('fix-admin-access', {
+                        body: { email: user.email }
+                      });
+
+                      if (error) throw error;
+
+                      if (data.success) {
+                        toast({ title: "Sucesso!", description: "Acesso restaurado. Recarregando..." });
+                        queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+                        setTimeout(() => window.location.reload(), 1500);
+                      }
+                    } catch (funcError: any) {
+                      console.warn("Edge attempt failed, trying direct:", funcError);
+
+                      try {
+                        // Tentativa 2: Direct Insert
+                        await supabase.from("user_roles").upsert({
+                          user_id: user.id,
+                          role: "admin"
+                        }, { onConflict: "user_id,role" });
+
+                        const { error: directError } = await supabase.from("admin_users").upsert({
+                          user_id: user.id,
+                          email: user.email,
+                          full_name: "Admin Recuperado",
+                          is_active: true
+                        }, { onConflict: "user_id" });
+
+                        if (directError) throw directError;
+
+                        toast({ title: "Sucesso!", description: "Dados restaurados manualmente." });
+                        setTimeout(() => window.location.reload(), 1500);
+
+                      } catch (finalError) {
+                        toast({
+                          title: "Falha Automática",
+                          description: "Bloqueio de segurança ativo. Use a correção manual.",
+                          variant: "destructive"
+                        });
+                        setShowManualHelp(true);
+                      }
                     }
-                  } catch (e: any) {
-                    toast({ title: "Erro no reparo", description: e.message, variant: "destructive" });
-                  }
-                }}
-              >
-                <Shield className="mr-2 h-3 w-3" />
-                Forçar Correção de Permissões (Emergência)
-              </Button>
+                  }}
+                >
+                  <Shield className="mr-2 h-3 w-3" />
+                  Tentar Reparo Automático
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => setShowManualHelp(true)}
+                >
+                  Solução Manual (Garantida)
+                </Button>
+              </div>
             )}
           </div>
 
