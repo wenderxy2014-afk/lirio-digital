@@ -296,6 +296,35 @@ export default function UsersPage() {
               <p><strong>Total Carregado:</strong> {adminUsers?.length || 0} registros</p>
               <p><strong>Status Carregamento:</strong> {isLoading ? "Carregando..." : "Concluído"}</p>
             </div>
+            {(!adminUsers || adminUsers.length === 0) && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="mt-4 w-full"
+                onClick={async () => {
+                  if (!user?.email) return;
+                  toast({ title: "Iniciando reparo...", description: "Tentando restaurar seu acesso administrativo." });
+                  try {
+                    const { data, error } = await supabase.functions.invoke('fix-admin-access', {
+                      body: { email: user.email }
+                    });
+                    if (error) throw error;
+                    if (data.success) {
+                      toast({ title: "Sucesso!", description: "Acesso restaurado. Recarregando..." });
+                      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+                      window.location.reload();
+                    } else {
+                      throw new Error(data.error || "Falha desconhecida");
+                    }
+                  } catch (e: any) {
+                    toast({ title: "Erro no reparo", description: e.message, variant: "destructive" });
+                  }
+                }}
+              >
+                <Shield className="mr-2 h-3 w-3" />
+                Forçar Correção de Permissões (Emergência)
+              </Button>
+            )}
           </div>
 
           {isLoading ? (
