@@ -4,14 +4,15 @@
  import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
  import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
  
- const corsHeaders = {
-   "Access-Control-Allow-Origin": "*",
-   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
- };
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
  
  serve(async (req) => {
    if (req.method === "OPTIONS") {
-     return new Response(null, { headers: corsHeaders });
+      return new Response("ok", { headers: corsHeaders });
    }
  
    try {
@@ -35,40 +36,95 @@
        );
      }
  
-     // Create auth user
-     const { data: user, error: createError } = await admin.auth.admin.createUser({
-       email,
-       password,
-       email_confirm: true, // Auto-confirm email
-       user_metadata: {
-         full_name: fullName || null,
-       },
-     });
- 
-     if (createError) {
-       console.error("Error creating user:", createError);
-       return new Response(
-         JSON.stringify({ error: createError.message }),
-         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-       );
-     }
- 
-     if (!user.user) {
-       throw new Error("Failed to create user");
-     }
+      // Create or reuse auth user
+      let createdNew = false;
+      let targetUserId: string | null = null;
+      let targetUserEmail: string | null = null;
+
+      const { data: created, error: createError } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          full_name: fullName || null,
+        },
+      });
+
+      if (createError) {
+        // If the email already exists, reuse that user and just assign role/profile records.
+        const errAny = createError as any;
+        if (errAny?.code === "email_exists") {
+          const { data: listData, error: listErr } = await admin.auth.admin.listUsers({
+            page: 1,
+            perPage: 1000,
+          });
+
+          if (listErr) {
+            console.error("Error listing users:", listErr);
+            return new Response(
+              JSON.stringify({ error: "Falha ao localizar o usuário existente." }),
+              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+
+          const found = listData.users?.find((u: any) =>
+            String(u.email || "").toLowerCase() === String(email).toLowerCase()
+          );
+
+          if (!found?.id) {
+            return new Response(
+              JSON.stringify({ error: "Usuário já existe, mas não foi possível recuperá-lo." }),
+              { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+
+          targetUserId = found.id;
+          targetUserEmail = found.email || email;
+        } else {
+          console.error("Error creating user:", createError);
+          return new Response(
+            JSON.stringify({ error: createError.message }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      } else {
+        if (!created.user) {
+          throw new Error("Failed to create user");
+        }
+        createdNew = true;
+        targetUserId = created.user.id;
+        targetUserEmail = created.user.email ?? email;
+      }
+
+      if (!targetUserId) {
+        throw new Error("Failed to resolve target user id");
+      }
  
      // Insert role
-     const { error: roleError } = await admin
-       .from("user_roles")
-       .insert({
-         user_id: user.user.id,
-         role: role || "editor",
-       });
+      // Ensure role exists: replace any existing roles for this user (app uses 1 role per admin user)
+      const { error: roleDeleteError } = await admin
+        .from("user_roles")
+        .delete()
+        .eq("user_id", targetUserId);
+
+      if (roleDeleteError) {
+        console.error("Error clearing existing roles:", roleDeleteError);
+        // Not fatal; continue to try insert
+      }
+
+      const { error: roleError } = await admin
+        .from("user_roles")
+        .insert({
+          user_id: targetUserId,
+          role: role || "editor",
+        });
  
      if (roleError) {
        console.error("Error assigning role:", roleError);
-       // Try to delete the created user if role assignment fails
-       await admin.auth.admin.deleteUser(user.user.id);
+        // Try to delete the created user if role assignment fails (only if we just created it)
+        if (createdNew && targetUserId) {
+          await admin.auth.admin.deleteUser(targetUserId);
+        }
        return new Response(
          JSON.stringify({ error: "Failed to assign role: " + roleError.message }),
          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -79,7 +135,7 @@
      const { error: profileError } = await admin
        .from("profiles")
        .insert({
-         user_id: user.user.id,
+          user_id: targetUserId,
          email,
          full_name: fullName || null,
        });
@@ -93,7 +149,7 @@
      const { error: adminUserError } = await admin
        .from("admin_users")
        .insert({
-         user_id: user.user.id,
+          user_id: targetUserId,
          email,
          full_name: fullName || null,
          is_active: true,
@@ -106,7 +162,7 @@
      // If editor and permissions provided, insert permissions
      if (role === "editor" && permissions && Array.isArray(permissions)) {
        const permissionRecords = permissions.map((perm: any) => ({
-         user_id: user.user.id,
+          user_id: targetUserId,
          module: perm.module,
          can_read: perm.can_read ?? true,
          can_write: perm.can_write ?? false,
@@ -136,9 +192,10 @@
      return new Response(
        JSON.stringify({
          success: true,
+          reusedExistingUser: !createdNew,
          user: {
-           id: user.user.id,
-           email: user.user.email,
+            id: targetUserId,
+            email: targetUserEmail ?? email,
          },
        }),
        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
