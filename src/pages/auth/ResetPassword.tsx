@@ -56,8 +56,41 @@ import { useToast } from "@/hooks/use-toast";
           return;
         }
 
-        // 3) Some flows use a `code` query param (PKCE). Try exchanging it for a session.
+        // 3) Some providers send `token`/`token_hash` + `type=recovery` (OTP verify flow).
+        // In this case we must call verifyOtp to create a session.
         const url = new URL(window.location.href);
+        const type = url.searchParams.get("type");
+        const tokenHash =
+          url.searchParams.get("token_hash") ||
+          url.searchParams.get("token") ||
+          url.searchParams.get("tokenHash");
+
+        if (type === "recovery" && tokenHash) {
+          const { error } = await supabase.auth.verifyOtp({
+            type: "recovery",
+            token_hash: tokenHash,
+          });
+
+          if (error) {
+            toast({
+              title: "Erro",
+              description: "Link inválido ou expirado. Solicite uma nova redefinição de senha.",
+              variant: "destructive",
+            });
+          } else {
+            // Remove sensitive params after successful verification.
+            url.searchParams.delete("type");
+            url.searchParams.delete("token_hash");
+            url.searchParams.delete("token");
+            url.searchParams.delete("tokenHash");
+            window.history.replaceState(null, "", url.toString());
+          }
+
+          if (!cancelled) setHydratingSession(false);
+          return;
+        }
+
+        // 4) Some flows use a `code` query param (PKCE). Try exchanging it for a session.
         const code = url.searchParams.get("code");
         if (code) {
           // In supabase-js v2, exchangeCodeForSession expects the *code* (not the full URL).
@@ -77,7 +110,7 @@ import { useToast } from "@/hooks/use-toast";
           return;
         }
 
-        // 4) No session and no tokens/code found.
+        // 5) No session and no tokens/code found.
         toast({
           title: "Erro",
           description: "Sessão de redefinição não encontrada. Abra novamente o link do e-mail.",
