@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
- import { supabase } from "@/integrations/supabase/client";
- import { SiteLayout } from "@/components/site/SiteLayout";
- import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
- import { Input } from "@/components/ui/input";
- import { Label } from "@/components/ui/label";
- import { Button } from "@/components/ui/button";
- import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { SiteLayout } from "@/components/site/SiteLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
  
  export default function ResetPassword() {
    const [password, setPassword] = useState("");
@@ -46,6 +46,12 @@ import { useNavigate } from "react-router-dom";
               variant: "destructive",
             });
           }
+
+          // Remove tokens from URL to avoid re-processing on refresh.
+          if (window.location.hash) {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+          }
+
           if (!cancelled) setHydratingSession(false);
           return;
         }
@@ -54,13 +60,18 @@ import { useNavigate } from "react-router-dom";
         const url = new URL(window.location.href);
         const code = url.searchParams.get("code");
         if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+          // In supabase-js v2, exchangeCodeForSession expects the *code* (not the full URL).
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
             toast({
               title: "Erro",
               description: "Link inválido ou expirado. Solicite uma nova redefinição de senha.",
               variant: "destructive",
             });
+          } else {
+            // Remove the code from URL after successful exchange.
+            url.searchParams.delete("code");
+            window.history.replaceState(null, "", url.toString());
           }
           if (!cancelled) setHydratingSession(false);
           return;
