@@ -30,85 +30,14 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    // 2) Generate devotional (internal) - FALLBACK TO GEMINI DIRECT (Lovable Key Missing)
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "AIzaSyAYf7RMlIr5A6g87DfZxO4c_GQ6Ub2R150";
 
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Missing backend configuration");
-    }
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    if (!geminiApiKey) {
+      throw new Error("API Configuration Error: Missing GEMINI_API_KEY");
     }
 
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-      auth: { persistSession: false },
-    });
-
-    const day = todayKeySP();
-
-    // Parse request body for custom parameters
-    let customTheme = "";
-    let customBibleBook = "";
-    let customTone = "";
-    let customLength = 1200;
-    let forceNew = false;
-
-    try {
-      const body = await req.json();
-      customTheme = body?.theme || "";
-      customBibleBook = body?.bible_book || "";
-      customTone = body?.tone || "";
-      customLength = body?.length || 1200;
-      forceNew = body?.force_new === true;
-    } catch {
-      // No body or invalid JSON, use defaults
-    }
-
-    // 0) Optional: Clean history if requested (checks url and headers)
-    const isCleanRequested =
-      req.url.includes("clean=") ||
-      req.headers.get("x-clean-history") === "true";
-
-    console.log(`Request URL: ${req.url}`);
-    console.log(`Is Clean Requested: ${isCleanRequested}`);
-
-    if (isCleanRequested) {
-      console.log("Cleaning ALL devotionals to force re-generation...");
-      const { data: count, error: deleteError } = await admin
-        .from("ebd_devotionals")
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000")
-        .select();
-
-      if (deleteError) throw deleteError;
-
-      return new Response(JSON.stringify({
-        message: "History cleaned successfully.",
-        deletedCount: count?.length ?? 0
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // 1) Read existing
-    // Skip if force_new is requested (user wants to generate with custom params)
-    if (!forceNew) {
-      const { data, error } = await admin
-        .from("ebd_devotionals")
-        .select("id,day,title,body,bible_reference,created_at")
-        .eq("day", day)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (data) {
-        return new Response(JSON.stringify(data satisfies Devotional), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    // 2) Generate devotional (internal)
-    const system =
-      "Você é um redator cristão evangélico especializado em criar devocionais bíblicos e pastorais para uma igreja local. Você DEVE seguir rigorosamente o tema e tom especificados pelo usuário. Escreva em português do Brasil.";
+    const systemPrompt = "Você é um redator cristão evangélico especializado em criar devocionais bíblicos e pastorais para uma igreja local. Você DEVE seguir rigorosamente o tema e tom especificados pelo usuário. Escreva em português do Brasil.";
 
     // Generate theme prompt
     let themePrompt = "";
@@ -146,72 +75,64 @@ serve(async (req) => {
 
     const toneText = customTone || "Pastoral e encorajador";
 
-    const user = `Crie o devocional do dia (${day}).
+    const userPrompt = `Crie o devocional do dia (${day}).
 
 ${themePrompt}
 
 Tom OBRIGATÓRIO: ${toneText}. Mantenha este tom durante todo o texto.
 
 Regras:
-- Retorne APENAS JSON válido (sem markdown).
-- Campos: title (string), bible_reference (string), body (string).
+- Retorne APENAS JSON válido (sem markdown, sem \`\`\`).
+- Campos obrigatórios: title (string), bible_reference (string), body (string).
 - body: aproximadamente ${customLength} caracteres, com aplicação prática, encerrando com uma oração curta (2-3 linhas).
 - O devocional deve refletir EXATAMENTE o tema especificado acima.
 - Nunca mencione que foi gerado por IA.
 - Títulos BLOQUEADOS (NUNCA USE): [${excludedTitles}, "A Rocha que não se Abala"].
 - IMPORTANTE: Crie um título TOTALMENTE novo, poético e inspirador, diferente de qualquer um acima.`;
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Direct call to Gemini API to bypass Lovable Gateway issues
+    const aiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        temperature: 0.7,
+        contents: [{
+          role: "user",
+          parts: [{ text: systemPrompt + "\n\n" + userPrompt }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          responseMimeType: "application/json"
+        }
       }),
     });
 
     if (!aiResp.ok) {
-      const t = await aiResp.text();
-      console.error("AI gateway error:", aiResp.status, t);
-
-      if (aiResp.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit. Tente novamente em instantes." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes para gerar o devocional." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify({ error: "Falha ao gerar o devocional." }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      const errorText = await aiResp.text();
+      console.error("Gemini API error:", aiResp.status, errorText);
+      throw new Error(`Gemini API Error: ${aiResp.statusText}`);
     }
 
     const aiJson = await aiResp.json();
-    const content = aiJson?.choices?.[0]?.message?.content;
-    if (!content || typeof content !== "string") {
-      throw new Error("Invalid AI response");
+    const content = aiJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!content) {
+      throw new Error("Invalid AI response from Gemini");
     }
 
     let parsed: { title: string; bible_reference: string; body: string };
     try {
       parsed = JSON.parse(content);
     } catch (e) {
-      console.error("AI returned non-JSON content:", content);
-      throw new Error("AI did not return JSON");
+      console.error("Failed to parse JSON content:", content);
+      // Try to clean markdown if model ignored instruction
+      const cleaned = content.replace(/```json\n?|```/g, "").trim();
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e2) {
+        throw new Error("AI did not return valid JSON");
+      }
     }
 
     const title = String(parsed.title ?? "Devocional do dia").slice(0, 160);
