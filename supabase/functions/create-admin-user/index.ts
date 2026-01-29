@@ -80,6 +80,29 @@
 
           targetUserId = found.id;
           targetUserEmail = found.email || email;
+
+          // IMPORTANT: If we're reusing an existing account, we still need to set the
+          // provided temporary password; otherwise the person will never be able to log in
+          // using the password shown/defined in the admin UI.
+          // (Common scenario: promoting an existing member account to admin/editor.)
+          const { error: updateAuthErr } = await admin.auth.admin.updateUserById(targetUserId, {
+            password,
+            email_confirm: true,
+            user_metadata: {
+              full_name: fullName || null,
+            },
+          });
+
+          if (updateAuthErr) {
+            console.error("Error updating existing user password:", updateAuthErr);
+            return new Response(
+              JSON.stringify({
+                error:
+                  "Usuário já existia, mas não foi possível atualizar a senha provisória. Use 'Esqueci minha senha' para definir uma nova senha.",
+              }),
+              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
         } else {
           console.error("Error creating user:", createError);
           return new Response(
