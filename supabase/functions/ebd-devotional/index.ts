@@ -48,11 +48,11 @@ serve(async (req) => {
       forceNew = false,
    } = requestBody;
 
-    // Generate devotional (internal) - FALLBACK TO GEMINI DIRECT (Lovable Key Missing)
-    const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "AIzaSyAYf7RMlIr5A6g87DfZxO4c_GQ6Ub2R150";
+   // Use Lovable AI Gateway
+   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!geminiApiKey) {
-      throw new Error("API Configuration Error: Missing GEMINI_API_KEY");
+   if (!LOVABLE_API_KEY) {
+     throw new Error("API Configuration Error: Missing LOVABLE_API_KEY");
     }
 
     const systemPrompt = "Você é um redator cristão evangélico especializado em criar devocionais bíblicos e pastorais para uma igreja local. Você DEVE seguir rigorosamente o tema e tom especificados pelo usuário. Escreva em português do Brasil.";
@@ -89,7 +89,7 @@ serve(async (req) => {
       .order("day", { ascending: false })
       .limit(5);
 
-    const excludedTitles = pastTitles?.map(t => t.title).join(", ") || "Nenhum ainda";
+   const excludedTitles = pastTitles?.map((t: any) => t.title).join(", ") || "Nenhum ainda";
 
     const toneText = customTone || "Pastoral e encorajador";
 
@@ -108,35 +108,35 @@ Regras:
 - Títulos BLOQUEADOS (NUNCA USE): [${excludedTitles}, "A Rocha que não se Abala"].
 - IMPORTANTE: Crie um título TOTALMENTE novo, poético e inspirador, diferente de qualquer um acima.`;
 
-    // Direct call to Gemini API to bypass Lovable Gateway issues
-    const aiResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+   // Call Lovable AI Gateway
+   const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
+       Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [{ text: systemPrompt + "\n\n" + userPrompt }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          responseMimeType: "application/json"
-        }
+       model: "google/gemini-3-flash-preview",
+       messages: [
+         { role: "system", content: systemPrompt },
+         { role: "user", content: userPrompt }
+       ],
+       temperature: 0.7,
+       response_format: { type: "json_object" }
       }),
     });
 
     if (!aiResp.ok) {
       const errorText = await aiResp.text();
-      console.error("Gemini API error:", aiResp.status, errorText);
-      throw new Error(`Gemini API Error: ${aiResp.statusText}`);
+     console.error("Lovable AI Gateway error:", aiResp.status, errorText);
+     throw new Error(`Lovable AI Gateway Error: ${aiResp.statusText}`);
     }
 
     const aiJson = await aiResp.json();
-    const content = aiJson?.candidates?.[0]?.content?.parts?.[0]?.text;
+   const content = aiJson?.choices?.[0]?.message?.content;
 
     if (!content) {
-      throw new Error("Invalid AI response from Gemini");
+     throw new Error("Invalid AI response from Lovable AI Gateway");
     }
 
     let parsed: { title: string; bible_reference: string; body: string };
