@@ -82,7 +82,12 @@ const Index = () => {
 
     if (!imageUrl) return slide;
 
-    // 1. Check Asset Map (Local Imports)
+    // 1. URLs completas (Supabase Storage, CDN, etc) - usar diretamente
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('blob:')) {
+      return slide;
+    }
+
+    // 2. Check Asset Map (Local Imports)
     const filename = imageUrl.split('/').pop();
     if (assetMap[imageUrl]) {
       return { ...slide, image_url: assetMap[imageUrl] };
@@ -91,7 +96,7 @@ const Index = () => {
       return { ...slide, image_url: assetMap[filename] };
     }
 
-    // 2. Return original (Full URLs or Unmapped paths)
+    // 3. Return original (Unmapped paths)
     return slide;
   });
 

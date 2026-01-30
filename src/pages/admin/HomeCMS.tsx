@@ -158,10 +158,14 @@ export default function HomeCMSPage() {
 
   const resolveAsset = (url: string) => {
     if (!url) return "";
+    // Priorizar URLs completas (Supabase Storage, CDN, etc)
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) {
+      return url;
+    }
+    // Verificar assetMap para paths locais
     if (assetMap[url]) return assetMap[url];
     const filename = url.split('/').pop();
     if (filename && assetMap[filename]) return assetMap[filename];
-    if (url.startsWith('http') || url.startsWith('blob:')) return url;
     return url;
   };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,10 @@ export function ImageUploader({
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | undefined>(currentImageUrl);
+
+  // Gerar ID único para cada instância do componente
+  const uniqueId = useId();
+  const inputId = `image-upload-${uniqueId}`;
 
   useEffect(() => {
     setPreviewUrl(currentImageUrl);
@@ -168,7 +172,7 @@ export function ImageUploader({
                 <X className="h-4 w-4 mr-2" />
                 Remover
               </Button>
-              <label htmlFor="image-upload">
+              <label htmlFor={inputId}>
                 <Button
                   type="button"
                   variant="secondary"
@@ -186,7 +190,7 @@ export function ImageUploader({
         </div>
       ) : (
         <label
-          htmlFor="image-upload"
+          htmlFor={inputId}
           className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80 transition-colors"
         >
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -211,7 +215,7 @@ export function ImageUploader({
       )}
 
       <input
-        id="image-upload"
+        id={inputId}
         type="file"
         accept="image/*"
         className="hidden"
