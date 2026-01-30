@@ -9,17 +9,20 @@ import {
   BreadcrumbPage
 } from "@/components/ui/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Layout, Image, Type, MousePointerClick, Save, Loader2 } from "lucide-react";
+import { Layout, Image, Type, MousePointerClick, Save, Loader2, Megaphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { ImageUploader } from "@/components/admin/ImageUploader";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { TickerConfig, defaultTickerConfig } from "@/components/site/Ticker";
 import bannerFamilia from "@/assets/banner-familia.png";
 import bannerMaturidade from "@/assets/banner-maturidade.png";
 import bannerHomens from "@/assets/banner-homens.png";
@@ -137,6 +140,9 @@ export default function HomeCMSPage() {
     next_steps_description: "",
   });
 
+  // Ticker section state
+  const [tickerForm, setTickerForm] = useState<TickerConfig>(defaultTickerConfig);
+
   // Map to resolve asset paths to actual imports
   const assetMap: Record<string, string> = {
     '/src/assets/banner-familia.png': bannerFamilia,
@@ -152,18 +158,10 @@ export default function HomeCMSPage() {
 
   const resolveAsset = (url: string) => {
     if (!url) return "";
-
-    // 1. Check strict map match
     if (assetMap[url]) return assetMap[url];
-
-    // 2. Check filename match (e.g. 'banner-familia.png' from '/src/assets/banner-familia.png')
     const filename = url.split('/').pop();
     if (filename && assetMap[filename]) return assetMap[filename];
-
-    // 3. If it is a full URL (http/https), return as is
     if (url.startsWith('http') || url.startsWith('blob:')) return url;
-
-    // 4. Default: Return original. Ideally this should be a valid URL.
     return url;
   };
 
@@ -172,10 +170,6 @@ export default function HomeCMSPage() {
     if (homeContent?.hero) {
       setHeroForm({
         ...homeContent.hero,
-        // Ensure we show the resolved URL in the input preview if it's an asset, 
-        // BUT keep the original value for saving if unchanged? 
-        // Actually, for admin UX, it's better to show the resolved URL or allow overwrite.
-        // Let's resolve it for display.
         video_url: resolveAsset(homeContent.hero.video_url)
       });
     }
@@ -183,7 +177,6 @@ export default function HomeCMSPage() {
       setButtonsForm(homeContent.buttons);
     }
     if (homeContent?.carousel) {
-      // Resolve all slide images
       const resolvedSlides = (homeContent.carousel.slides || []).map((s: any) => ({
         ...s,
         image_url: resolveAsset(s.image_url)
@@ -192,6 +185,9 @@ export default function HomeCMSPage() {
     }
     if (homeContent?.texts) {
       setTextsForm(homeContent.texts);
+    }
+    if (homeContent?.ticker) {
+      setTickerForm(homeContent.ticker);
     }
   }, [homeContent]);
 
@@ -229,8 +225,12 @@ export default function HomeCMSPage() {
         </p>
       </header>
 
-      <Tabs defaultValue="hero" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="ticker" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="ticker">
+            <Megaphone className="h-4 w-4 mr-2" />
+            Letreiro
+          </TabsTrigger>
           <TabsTrigger value="hero">
             <Type className="h-4 w-4 mr-2" />
             Hero
@@ -248,6 +248,268 @@ export default function HomeCMSPage() {
             Textos
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="ticker">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuração do Letreiro</CardTitle>
+              <CardDescription>
+                Customize a faixa de boas-vindas animada
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveMutation.mutate({ section: "ticker", content: tickerForm });
+                }}
+                className="space-y-6"
+              >
+                <div className="flex items-center justify-between rounded-lg border p-4 bg-muted/40">
+                  <div className="space-y-0.5">
+                    <Label>Ativar Letreiro</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Mostrar ou ocultar o letreiro na home
+                    </p>
+                  </div>
+                  <Switch
+                    checked={tickerForm.enabled}
+                    onCheckedChange={(checked) => setTickerForm({ ...tickerForm, enabled: checked })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Texto do Letreiro</Label>
+                  <Textarea
+                    value={tickerForm.text}
+                    onChange={(e) => setTickerForm({ ...tickerForm, text: e.target.value })}
+                    placeholder="Digite a mensagem..."
+                    rows={2}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Efeito de Animação</Label>
+                    <Select
+                      value={tickerForm.effect}
+                      onValueChange={(val: any) => setTickerForm({ ...tickerForm, effect: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="scroll">Rolar (Scroll)</SelectItem>
+                        <SelectItem value="pulse">Pulsar</SelectItem>
+                        <SelectItem value="static">Estático</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Velocidade ({tickerForm.speed} - {tickerForm.speed <= 5 ? 'Ultra Rápido' : tickerForm.speed <= 10 ? 'Rápido' : tickerForm.speed <= 20 ? 'Normal' : 'Lento'})</Label>
+                    <Slider
+                      value={[tickerForm.speed]}
+                      min={1}
+                      max={30}
+                      step={1}
+                      onValueChange={(vals) => setTickerForm({ ...tickerForm, speed: vals[0] })}
+                    />
+                    <p className="text-xs text-muted-foreground">Quanto menor o valor, mais rápido o letreiro passa</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Cor do Texto</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={tickerForm.textColor}
+                        onChange={(e) => setTickerForm({ ...tickerForm, textColor: e.target.value })}
+                        className="w-12 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={tickerForm.textColor}
+                        onChange={(e) => setTickerForm({ ...tickerForm, textColor: e.target.value })}
+                        placeholder="#000000"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Cor de Fundo</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={tickerForm.backgroundColor}
+                        onChange={(e) => setTickerForm({ ...tickerForm, backgroundColor: e.target.value })}
+                        className="w-12 h-10 p-1 cursor-pointer"
+                      />
+                      <Input
+                        type="text"
+                        value={tickerForm.backgroundColor}
+                        onChange={(e) => setTickerForm({ ...tickerForm, backgroundColor: e.target.value })}
+                        placeholder="#ffffff"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Tamanho da Fonte</Label>
+                    <Select
+                      value={tickerForm.fontSize}
+                      onValueChange={(val) => setTickerForm({ ...tickerForm, fontSize: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="text-sm">Pequeno</SelectItem>
+                        <SelectItem value="text-base">Normal</SelectItem>
+                        <SelectItem value="text-lg">Grande</SelectItem>
+                        <SelectItem value="text-xl">Muito Grande</SelectItem>
+                        <SelectItem value="text-2xl">Enorme</SelectItem>
+                        <SelectItem value="text-3xl">Gigante</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Fonte</Label>
+                    <Select
+                      value={tickerForm.fontFamily}
+                      onValueChange={(val) => setTickerForm({ ...tickerForm, fontFamily: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="font-ticker">Condensada (Lagoinha - Recomendado)</SelectItem>
+                        <SelectItem value="font-sans">Sans Serif (Padrão)</SelectItem>
+                        <SelectItem value="font-serif">Serif (Elegante)</SelectItem>
+                        <SelectItem value="font-mono">Monoespaçada</SelectItem>
+                        <SelectItem value="font-display">Display (Títulos)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">"Condensada" é o estilo igual ao site da Lagoinha</p>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                    <Label>Negrito</Label>
+                    <Switch
+                      checked={tickerForm.isBold}
+                      onCheckedChange={(checked) => setTickerForm({ ...tickerForm, isBold: checked })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <Label>Caixa Alta (MAIÚSCULAS)</Label>
+                      <p className="text-xs text-muted-foreground">Estilo impactante como da Lagoinha</p>
+                    </div>
+                    <Switch
+                      checked={tickerForm.isUppercase ?? true}
+                      onCheckedChange={(checked) => setTickerForm({ ...tickerForm, isUppercase: checked })}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <Label>Itálico</Label>
+                      <p className="text-xs text-muted-foreground">Texto inclinado estilo Lagoinha</p>
+                    </div>
+                    <Switch
+                      checked={tickerForm.isItalic ?? true}
+                      onCheckedChange={(checked) => setTickerForm({ ...tickerForm, isItalic: checked })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Estilo Visual</Label>
+                    <Select
+                      value={(tickerForm as any).style || "integrated"}
+                      onValueChange={(val) => setTickerForm({ ...tickerForm, style: val as any })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="integrated">Integrado ao Fundo (Lagoinha)</SelectItem>
+                        <SelectItem value="boxed">Com Caixa/Borda</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Integrado = sem bordas, faz parte do fundo da página</p>
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-lg border p-4 bg-gradient-to-r from-amber-100 to-orange-100">
+                    <div className="space-y-0.5">
+                      <Label>Usar Gradiente</Label>
+                      <p className="text-xs text-muted-foreground">Fundo com degradê colorido</p>
+                    </div>
+                    <Switch
+                      checked={tickerForm.useGradient ?? true}
+                      onCheckedChange={(checked) => setTickerForm({ ...tickerForm, useGradient: checked })}
+                    />
+                  </div>
+
+                  {tickerForm.useGradient && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Cor Inicial do Gradiente</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={tickerForm.gradientFrom || "#FFD54F"}
+                            onChange={(e) => setTickerForm({ ...tickerForm, gradientFrom: e.target.value })}
+                            className="w-12 h-10 p-1 cursor-pointer"
+                          />
+                          <Input
+                            type="text"
+                            value={tickerForm.gradientFrom || "#FFD54F"}
+                            onChange={(e) => setTickerForm({ ...tickerForm, gradientFrom: e.target.value })}
+                            placeholder="#FFD54F"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Cor Final do Gradiente</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={tickerForm.gradientTo || "#FF9800"}
+                            onChange={(e) => setTickerForm({ ...tickerForm, gradientTo: e.target.value })}
+                            className="w-12 h-10 p-1 cursor-pointer"
+                          />
+                          <Input
+                            type="text"
+                            value={tickerForm.gradientTo || "#FF9800"}
+                            onChange={(e) => setTickerForm({ ...tickerForm, gradientTo: e.target.value })}
+                            placeholder="#FF9800"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <Button type="submit" disabled={saveMutation.isPending}>
+                  {saveMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Salvar Letreiro
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="hero">
           <Card>

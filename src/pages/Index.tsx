@@ -9,9 +9,9 @@ import { useAuth } from "@/providers/AuthProvider";
 import { MemberAuthDialog } from "@/components/site/MemberAuthDialog";
 import { motion, useReducedMotion } from "framer-motion";
 import { usePointerGlow } from "@/hooks/usePointerGlow";
+import { Ticker, defaultTickerConfig } from "@/components/site/Ticker";
 import heroVideo from "@/assets/hero-bg.mp4";
 import homeCardsVideo from "@/assets/home-cards-bg.mp4";
-import igrejaBg from "@/assets/igreja-bg.png";
 import bannerFamilia from "@/assets/banner-familia.png";
 import bannerMaturidade from "@/assets/banner-maturidade.png";
 import bannerHomens from "@/assets/banner-homens.png";
@@ -62,6 +62,8 @@ const Index = () => {
     { image_url: bannerCeia, alt_text: "A Ceia do Senhor", order: 4 },
   ];
 
+  const tickerData = (homeContent?.ticker as any) || defaultTickerConfig;
+
   // Map to resolve asset paths to actual imports
   const assetMap: Record<string, string> = {
     '/src/assets/banner-familia.png': bannerFamilia,
@@ -93,11 +95,6 @@ const Index = () => {
     return slide;
   });
 
-  const textsData = (homeContent?.texts as any) || {
-    next_steps_title: "Próximos passos",
-    next_steps_description: "Ajuste textos oficiais, contatos e adicione imagens reais. O admin permite cadastrar conteúdo e moderar testemunhos.",
-  };
-
   // Resolve video URL (handle both paths and imports)
   const videoUrl = typeof heroData.video_url === 'string' && heroData.video_url.startsWith('hero-bg')
     ? heroVideo
@@ -105,6 +102,9 @@ const Index = () => {
 
   return (
     <SiteLayout>
+      {/* Ticker Section - Estilo Lagoinha integrado ao topo */}
+      <Ticker config={tickerData} />
+
       <section
         className="relative overflow-hidden rounded-3xl border bg-brand p-8 text-primary-foreground shadow-glow md:p-12"
         style={{
@@ -286,22 +286,6 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
-      </section>
-
-      <section className="mt-14">
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-          className="rounded-3xl border bg-card p-8 shadow-lift"
-        >
-          <h2 className="font-display text-2xl">{textsData.next_steps_title}</h2>
-          <p className="mt-2 text-muted-foreground">
-            {textsData.next_steps_description}
-          </p>
-        </motion.div>
       </section>
 
       <section className="mt-16">
