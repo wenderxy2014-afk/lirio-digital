@@ -2,7 +2,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { HomeAudioToggle } from "@/components/site/HomeAudioToggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowRight, Calendar, HeartHandshake, Users } from "lucide-react";
+import { ArrowRight, Calendar, HeartHandshake, Users, MapPin } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useCells, useEvents, useSettings, useAllHomeContent } from "@/data/queries";
 import { useAuth } from "@/providers/AuthProvider";
@@ -341,6 +341,83 @@ const Index = () => {
           <CarouselPrevious className="left-4" />
           <CarouselNext className="right-4" />
         </Carousel>
+      </section>
+
+      {/* Seção de Localização com Mapa */}
+      <section className="mt-16">
+        <div className="rounded-3xl border bg-card p-6 shadow-lift md:p-8">
+          <div className="mb-6 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-4 py-2 text-sm font-medium text-primary">
+              <MapPin className="h-4 w-4" />
+              Nossa Localização
+            </div>
+            <h2 className="mt-4 font-display text-2xl font-bold text-foreground md:text-3xl">
+              Venha nos visitar!
+            </h2>
+            <p className="mt-2 text-muted-foreground">
+              Estamos de portas abertas para receber você e sua família
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Informações de Contato */}
+            <div className="space-y-4 rounded-2xl bg-brand-soft/50 p-6">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-primary/10 p-2">
+                  <MapPin className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">Endereço</div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    R. Rad. Caetano Silva, 90<br />
+                    Céu Azul, Belo Horizonte - MG<br />
+                    CEP: 31540-480
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-primary/10 p-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="font-medium text-foreground">Cultos</div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Domingo: 9h e 18h<br />
+                    Quarta: 19h30
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=R.+Rad.+Caetano+Silva,+90+-+Céu+Azul,+Belo+Horizonte+-+MG,+31540-480"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-lg"
+              >
+                <MapPin className="h-4 w-4" />
+                Abrir no Google Maps
+              </a>
+            </div>
+
+            {/* Mapa do Google */}
+            <div className="lg:col-span-2">
+              <div className="overflow-hidden rounded-2xl border shadow-lg">
+                <iframe
+                  src="https://maps.google.com/maps?q=Igreja+Batista+Lírio+dos+Vales,+Rua+Radialista+Caetano+Silva,+90,+Céu+Azul,+Belo+Horizonte,+MG,+Brasil&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                  width="100%"
+                  height="350"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Localização da Igreja Batista Lírio dos Vales"
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </SiteLayout>
   );
