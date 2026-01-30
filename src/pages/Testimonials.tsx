@@ -10,7 +10,7 @@ import { useTestimonials } from "@/data/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { testimonialSchema } from "@/lib/validation";
 import { useState } from "react";
-import { Minus, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, Heart, Quote, ExternalLink, Sparkles, MessageSquareHeart } from "lucide-react";
 
 function TestimonialItem({ data: t }: { data: any }) {
   const [expanded, setExpanded] = useState(false);
@@ -24,18 +24,33 @@ function TestimonialItem({ data: t }: { data: any }) {
   const displayText = !expanded && isLongText ? t.body.slice(0, MAX_LENGTH) + "..." : t.body;
 
   return (
-    <Card className="overflow-hidden transition-all duration-300 hover:shadow-md">
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-        <div className="space-y-1">
-          <CardTitle className="font-display text-xl leading-tight">{t.title}</CardTitle>
-          {t.person_name && <div className="text-sm font-medium text-muted-foreground">{t.person_name}</div>}
+    <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-card via-card to-primary/5 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      {/* Aspas decorativas */}
+      <div className="absolute -right-4 -top-4 text-primary/10">
+        <Quote className="h-24 w-24" />
+      </div>
+
+      {/* Efeito de brilho no hover */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+      <CardHeader className="relative flex flex-row items-start justify-between space-y-0 pb-2">
+        <div className="space-y-1 flex-1">
+          <CardTitle className="font-display text-xl leading-tight text-foreground">{t.title}</CardTitle>
+          {t.person_name && (
+            <div className="flex items-center gap-2 text-sm text-primary">
+              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                <Heart className="h-3 w-3" />
+              </div>
+              {t.person_name}
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-1 bg-muted/30 p-1 rounded-lg">
+        <div className="flex items-center gap-1 rounded-xl bg-background/80 p-1 backdrop-blur shadow-sm">
           <Button
             variant="ghost"
             size="icon"
             onClick={handleZoomOut}
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-primary/10"
             title="Diminuir fonte"
             disabled={textSize <= 80}
           >
@@ -48,7 +63,7 @@ function TestimonialItem({ data: t }: { data: any }) {
             variant="ghost"
             size="icon"
             onClick={handleZoomIn}
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-primary/10"
             title="Aumentar fonte"
             disabled={textSize >= 150}
           >
@@ -57,21 +72,23 @@ function TestimonialItem({ data: t }: { data: any }) {
         </div>
       </CardHeader>
 
-      <CardContent className="text-left space-y-4 pt-4">
+      <CardContent className="relative text-left space-y-4 pt-4">
         {t.body && (
           <div className="relative">
-            <div
-              style={{ fontSize: `${textSize}%`, lineHeight: '1.6' }}
-              className="text-muted-foreground transition-[font-size] duration-300"
-            >
-              <p className="whitespace-pre-wrap">{displayText}</p>
+            <div className="rounded-xl bg-background/50 p-4 backdrop-blur">
+              <div
+                style={{ fontSize: `${textSize}%`, lineHeight: '1.7' }}
+                className="text-muted-foreground transition-[font-size] duration-300"
+              >
+                <p className="whitespace-pre-wrap">{displayText}</p>
+              </div>
             </div>
 
             {isLongText && (
               <Button
                 variant="ghost"
                 onClick={() => setExpanded(!expanded)}
-                className="mt-2 h-auto p-0 font-medium text-primary hover:text-primary/80 hover:bg-transparent flex items-center gap-1"
+                className="mt-3 h-auto p-0 font-medium text-primary hover:text-primary/80 hover:bg-transparent flex items-center gap-1"
               >
                 {expanded ? (
                   <>Ler menos <ChevronUp className="h-4 w-4" /></>
@@ -84,17 +101,15 @@ function TestimonialItem({ data: t }: { data: any }) {
         )}
 
         {t.video_url && (
-          <div className="pt-2 border-t">
-            <a
-              className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline"
-              href={t.video_url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <span>Assistir vídeo do testemunho</span>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-external-link"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
-            </a>
-          </div>
+          <a
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-red-500/10 to-red-500/5 px-4 py-3 text-sm font-medium text-red-600 transition-all hover:from-red-500/20 hover:to-red-500/10"
+            href={t.video_url}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Assistir vídeo do testemunho
+          </a>
         )}
       </CardContent>
     </Card>
@@ -137,81 +152,114 @@ export default function TestimonialsPage() {
 
   return (
     <SiteLayout>
-      <header className="flex flex-col gap-4 text-left md:flex-row md:items-end md:justify-between mb-8">
-        <div>
-          <h1 className="font-display text-3xl md:text-4xl text-foreground">Testemunhos</h1>
-          <p className="mt-2 text-lg text-muted-foreground">Histórias reais de fé e transformação.</p>
+      {/* Hero Header com Glassmorphism */}
+      <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 md:p-12 mb-10">
+
+        {/* Aspas decorativas grandes */}
+        <div className="absolute right-8 top-8 text-primary/10">
+          <Quote className="h-32 w-32 md:h-48 md:w-48" />
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button variant="brand" size="lg" className="shadow-lg">
-              <Plus className="w-4 h-4 mr-2" />
-              Compartilhar meu testemunho
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle className="font-display text-xl">Enviar meu testemunho</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-5 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="title" className="text-base">Título do testemunho</Label>
-                <Input
-                  id="title"
-                  placeholder="Ex: Como Deus restaurou minha família"
-                  value={form.title}
-                  onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="body" className="text-base">Sua história (opcional)</Label>
-                <Textarea
-                  id="body"
-                  placeholder="Conte os detalhes do que Deus fez..."
-                  className="min-h-[150px] resize-y"
-                  value={form.body}
-                  onChange={(e) => setForm((s) => ({ ...s, body: e.target.value }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="video" className="text-base">Link do vídeo (YouTube/Vimeo) (opcional)</Label>
-                <Input
-                  id="video"
-                  placeholder="https://..."
-                  value={form.video_url}
-                  onChange={(e) => setForm((s) => ({ ...s, video_url: e.target.value }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="name" className="text-base">Seu Nome (opcional)</Label>
-                <Input
-                  id="name"
-                  placeholder="Como gostaria de ser identificado"
-                  value={form.person_name}
-                  onChange={(e) => setForm((s) => ({ ...s, person_name: e.target.value }))}
-                />
-              </div>
-              <Button variant="brand" onClick={() => void submit()} disabled={sending} className="w-full mt-2">
-                {sending ? "Enviando..." : "Enviar Testemunho"}
-              </Button>
+
+        <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary backdrop-blur">
+              <MessageSquareHeart className="h-4 w-4" />
+              Histórias de Fé
             </div>
-          </DialogContent>
-        </Dialog>
+            <h1 className="mt-4 font-display text-4xl font-bold text-foreground md:text-5xl">
+              Testemunhos
+            </h1>
+            <p className="mt-3 max-w-xl text-lg text-muted-foreground">
+              Histórias reais de fé, transformação e milagres que glorificam a Deus.
+            </p>
+          </div>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Compartilhar meu testemunho
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="border-0 bg-gradient-to-br from-background via-background to-primary/5 shadow-2xl sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle className="font-display text-xl flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Enviar meu testemunho
+                </DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-5 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title" className="text-sm font-medium">Título do testemunho</Label>
+                  <Input
+                    id="title"
+                    placeholder="Ex: Como Deus restaurou minha família"
+                    value={form.title}
+                    onChange={(e) => setForm((s) => ({ ...s, title: e.target.value }))}
+                    className="border-primary/20 bg-background/50 backdrop-blur transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="body" className="text-sm font-medium">Sua história (opcional)</Label>
+                  <Textarea
+                    id="body"
+                    placeholder="Conte os detalhes do que Deus fez..."
+                    className="min-h-[150px] resize-y border-primary/20 bg-background/50 backdrop-blur transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    value={form.body}
+                    onChange={(e) => setForm((s) => ({ ...s, body: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="video" className="text-sm font-medium">Link do vídeo (YouTube/Vimeo) (opcional)</Label>
+                  <Input
+                    id="video"
+                    placeholder="https://..."
+                    value={form.video_url}
+                    onChange={(e) => setForm((s) => ({ ...s, video_url: e.target.value }))}
+                    className="border-primary/20 bg-background/50 backdrop-blur transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="name" className="text-sm font-medium">Seu Nome (opcional)</Label>
+                  <Input
+                    id="name"
+                    placeholder="Como gostaria de ser identificado"
+                    value={form.person_name}
+                    onChange={(e) => setForm((s) => ({ ...s, person_name: e.target.value }))}
+                    className="border-primary/20 bg-background/50 backdrop-blur transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <Button
+                  onClick={() => void submit()}
+                  disabled={sending}
+                  className="w-full mt-2 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl"
+                  size="lg"
+                >
+                  {sending ? "Enviando..." : "Enviar Testemunho"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 pb-12">
+      {/* Grid de Testemunhos */}
+      <div className="grid gap-6 md:grid-cols-2 pb-12">
         {(data ?? []).map((t) => (
           <TestimonialItem key={t.id} data={t} />
         ))}
       </div>
 
       {(!data || data.length === 0) && (
-        <div className="flex flex-col items-center justify-center p-12 text-center rounded-3xl border border-dashed bg-muted/30">
-          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
-            <span className="text-2xl">✨</span>
+        <div className="flex flex-col items-center justify-center p-12 text-center rounded-3xl border border-dashed bg-gradient-to-br from-background to-primary/5">
+          <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+            <Sparkles className="h-8 w-8 text-primary" />
           </div>
           <h3 className="text-lg font-medium text-foreground">Nenhum testemunho ainda</h3>
-          <p className="text-muted-foreground mt-1 max-w-sm">
+          <p className="text-muted-foreground mt-2 max-w-sm">
             Seja o primeiro a compartilhar como Deus tem agido em sua vida.
           </p>
         </div>
