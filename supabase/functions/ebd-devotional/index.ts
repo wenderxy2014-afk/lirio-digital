@@ -30,7 +30,25 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    // 2) Generate devotional (internal) - FALLBACK TO GEMINI DIRECT (Lovable Key Missing)
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Missing required environment variables");
+    }
+
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Parse request body
+   const requestBody = await req.json().catch(() => ({}));
+    const {
+      day = todayKeySP(),
+      customTheme = null,
+      customBibleBook = null,
+      customTone = null,
+      customLength = 800,
+      forceNew = false,
+   } = requestBody;
+
+    // Generate devotional (internal) - FALLBACK TO GEMINI DIRECT (Lovable Key Missing)
     const geminiApiKey = Deno.env.get("GEMINI_API_KEY") || "AIzaSyAYf7RMlIr5A6g87DfZxO4c_GQ6Ub2R150";
 
     if (!geminiApiKey) {
@@ -150,7 +168,6 @@ Regras:
       bible_reference: bible_reference || null,
       body,
       model: "google/gemini-3-flash-preview",
-      is_published: false,
     };
 
     let resultData: Devotional | null = null;
