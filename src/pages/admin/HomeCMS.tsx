@@ -768,9 +768,11 @@ export default function HomeCMSPage() {
                           setCarouselForm({ ...carouselForm, slides: newSlides });
                         }}
                         folder="carousel"
+                        targetWidth={1280}
+                        targetHeight={720}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Recomendado: 1280 x 720 px (Full HD)
+                        ✅ Imagem será padronizada automaticamente para 1280 x 720 px
                       </p>
                     </div>
 

@@ -10,6 +10,10 @@ interface ImageUploaderProps {
   bucketName?: string;
   folder?: string;
   maxSizeMB?: number;
+  /** Largura fixa de saída (ex: 1280 para carrossel) */
+  targetWidth?: number;
+  /** Altura fixa de saída (ex: 720 para carrossel) */
+  targetHeight?: number;
 }
 
 export function ImageUploader({
@@ -18,6 +22,8 @@ export function ImageUploader({
   bucketName = "home-images",
   folder = "uploads",
   maxSizeMB = 5,
+  targetWidth,
+  targetHeight,
 }: ImageUploaderProps) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
@@ -48,7 +54,7 @@ export function ImageUploader({
     setUploading(true);
 
     try {
-      // Process image: Resize to max 1920px width & convert to WebP
+      // Process image: Resize/Crop to target dimensions & convert to WebP
       const processImage = (file: File): Promise<Blob> => {
         return new Promise((resolve, reject) => {
           const img = document.createElement("img");
@@ -64,19 +70,53 @@ export function ImageUploader({
               return;
             }
 
-            const MAX_WIDTH = 1920;
-            let width = img.width;
-            let height = img.height;
+            let finalWidth: number;
+            let finalHeight: number;
+            let sourceX = 0;
+            let sourceY = 0;
+            let sourceWidth = img.width;
+            let sourceHeight = img.height;
 
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
+            // Se tiver dimensões fixas definidas, fazer crop centralizado
+            if (targetWidth && targetHeight) {
+              finalWidth = targetWidth;
+              finalHeight = targetHeight;
+
+              const targetRatio = targetWidth / targetHeight;
+              const imgRatio = img.width / img.height;
+
+              if (imgRatio > targetRatio) {
+                // Imagem mais larga - recortar laterais
+                sourceHeight = img.height;
+                sourceWidth = img.height * targetRatio;
+                sourceX = (img.width - sourceWidth) / 2;
+              } else {
+                // Imagem mais alta - recortar topo/base
+                sourceWidth = img.width;
+                sourceHeight = img.width / targetRatio;
+                sourceY = (img.height - sourceHeight) / 2;
+              }
+            } else {
+              // Sem dimensões fixas - apenas limitar largura máxima
+              const MAX_WIDTH = 1920;
+              finalWidth = img.width;
+              finalHeight = img.height;
+
+              if (finalWidth > MAX_WIDTH) {
+                finalHeight *= MAX_WIDTH / finalWidth;
+                finalWidth = MAX_WIDTH;
+              }
             }
 
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = finalWidth;
+            canvas.height = finalHeight;
 
-            ctx.drawImage(img, 0, 0, width, height);
+            // Desenhar imagem com crop (se aplicável)
+            ctx.drawImage(
+              img,
+              sourceX, sourceY, sourceWidth, sourceHeight,  // Área de origem (crop)
+              0, 0, finalWidth, finalHeight                  // Área de destino
+            );
 
             canvas.toBlob((blob) => {
               if (blob) resolve(blob);
