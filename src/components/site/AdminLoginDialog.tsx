@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ShieldCheck, Loader2, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/iblv-logo.png";
+import { getPublicOrigin } from "@/lib/publicOrigin";
 
 interface AdminLoginDialogProps {
     children: React.ReactNode;
@@ -189,8 +190,9 @@ export function AdminLoginDialog({ children }: AdminLoginDialogProps) {
         e.preventDefault();
         setLoading(true);
         try {
+            const publicOrigin = getPublicOrigin();
             const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-                redirectTo: `${window.location.origin}/auth/reset-password`,
+                redirectTo: `${publicOrigin}/auth/reset-password`,
             });
 
             if (error) throw error;

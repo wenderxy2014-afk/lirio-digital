@@ -21,6 +21,34 @@ import { useToast } from "@/hooks/use-toast";
 
     const hydrateSessionFromUrl = async () => {
       try {
+        // Handle explicit error params in URL hash (e.g. otp_expired)
+        const rawHash = window.location.hash?.startsWith("#")
+          ? window.location.hash.slice(1)
+          : "";
+        const rawHashParams = new URLSearchParams(rawHash);
+        const hashError = rawHashParams.get("error");
+        const hashErrorCode = rawHashParams.get("error_code");
+        const hashErrorDesc = rawHashParams.get("error_description");
+
+        if (hashError) {
+          // Remove error from URL to avoid re-processing on refresh.
+          if (window.location.hash) {
+            window.history.replaceState(null, "", window.location.pathname + window.location.search);
+          }
+
+          toast({
+            title: "Link inválido",
+            description:
+              hashErrorCode === "otp_expired"
+                ? "Este link de redefinição expirou. Solicite um novo link e tente novamente."
+                : decodeURIComponent(hashErrorDesc || "Não foi possível validar o link. Solicite um novo."),
+            variant: "destructive",
+          });
+
+          if (!cancelled) setHydratingSession(false);
+          return;
+        }
+
         // 1) If session already exists, we're good.
         const { data: sessionData } = await supabase.auth.getSession();
         if (cancelled) return;
@@ -30,10 +58,8 @@ import { useToast } from "@/hooks/use-toast";
         }
 
         // 2) Recovery links may provide tokens in the URL hash (#access_token=...)
-        const hash = window.location.hash?.startsWith("#")
-          ? window.location.hash.slice(1)
-          : "";
-        const hashParams = new URLSearchParams(hash);
+        const hash = rawHash;
+        const hashParams = rawHashParams;
         const access_token = hashParams.get("access_token");
         const refresh_token = hashParams.get("refresh_token");
 
@@ -179,7 +205,7 @@ import { useToast } from "@/hooks/use-toast";
      });
  
      setTimeout(() => {
-       navigate("/auth");
+        navigate("/");
      }, 2000);
    };
  
