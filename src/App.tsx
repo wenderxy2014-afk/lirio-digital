@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { RequireAuth, RequireRole } from "@/components/auth/RouteGuards";
+import { AuthHashRedirect } from "@/components/auth/AuthHashRedirect";
 
 import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
       <Sonner />
       <AuthProvider>
         <BrowserRouter>
+          <AuthHashRedirect />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/cultos" element={<EventsPage />} />
