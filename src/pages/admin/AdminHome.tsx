@@ -17,35 +17,30 @@ export default function AdminHomePage() {
       description: "Devocionais, estudos, eventos, células, missões, kids e testemunhos.",
       icon: FileText,
       href: "/admin/conteudo",
-      variant: "brand" as const,
     },
     {
       title: "Configurações",
       description: "Nome da igreja, link de transmissão e Pix.",
       icon: Settings,
       href: "/admin/configuracoes",
-      variant: "brand" as const,
     },
     {
       title: "Editor da Home Page",
       description: "Edite textos, imagens e banners da página inicial.",
       icon: Layout,
       href: "/admin/home-cms",
-      variant: "outline" as const,
     },
     {
       title: "Devocionais com IA",
       description: "Gere devocionais personalizados usando inteligência artificial.",
       icon: Sparkles,
       href: "/admin/devocional-ia",
-      variant: "outline" as const,
     },
     {
       title: "Usuários e Permissões",
       description: "Gerencie usuários administrativos e suas permissões.",
       icon: Users,
       href: "/admin/usuarios",
-      variant: "outline" as const,
     },
   ];
 
@@ -108,11 +103,8 @@ export default function AdminHomePage() {
               </p>
               <Button
                 asChild
-                variant={item.variant}
-                className={`w-full transition-all duration-300 ${item.variant === "brand"
-                    ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg hover:shadow-xl"
-                    : ""
-                  }`}
+                variant="brand"
+                className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl"
               >
                 <NavLink to={item.href}>Abrir</NavLink>
               </Button>

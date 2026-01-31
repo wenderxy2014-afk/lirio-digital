@@ -9,8 +9,9 @@ import {
   BreadcrumbPage
 } from "@/components/ui/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Layout, Image, Type, MousePointerClick, Save, Loader2, Megaphone } from "lucide-react";
+import { Layout, Image, Type, MousePointerClick, Save, Loader2, Megaphone, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NavLink } from "@/components/NavLink";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -218,6 +219,14 @@ export default function HomeCMSPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
+
+      {/* Botão Voltar */}
+      <Button asChild variant="ghost" className="mb-4 gap-2 text-muted-foreground hover:text-foreground">
+        <NavLink to="/admin">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar ao Painel
+        </NavLink>
+      </Button>
 
       {/* Hero Header com Glassmorphism */}
       <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 md:p-12 mb-10">

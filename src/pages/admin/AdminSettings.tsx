@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSettings } from "@/data/queries";
-import { Settings, Church, Radio, Wallet, Save, MessageSquare } from "lucide-react";
+import { Settings, Church, Radio, Wallet, Save, MessageSquare, ArrowLeft } from "lucide-react";
+import { NavLink } from "@/components/NavLink";
 
 export default function AdminSettingsPage() {
   const { toast } = useToast();
@@ -49,6 +50,14 @@ export default function AdminSettingsPage() {
 
   return (
     <SiteLayout>
+      {/* Botão Voltar */}
+      <Button asChild variant="ghost" className="mb-4 gap-2 text-muted-foreground hover:text-foreground">
+        <NavLink to="/admin">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar ao Painel
+        </NavLink>
+      </Button>
+
       {/* Hero Header com Glassmorphism */}
       <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 md:p-12 mb-10">
         {/* Ícone decorativo */}

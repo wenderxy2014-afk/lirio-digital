@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Wand2, Calendar, Trash2, Edit, History } from "lucide-react";
+import { Sparkles, Wand2, Calendar, Trash2, Edit, History, ArrowLeft } from "lucide-react";
+import { NavLink } from "@/components/NavLink";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -240,6 +241,14 @@ export default function DevotionalAIPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
+
+      {/* Botão Voltar */}
+      <Button asChild variant="ghost" className="mb-4 gap-2 text-muted-foreground hover:text-foreground">
+        <NavLink to="/admin">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar ao Painel
+        </NavLink>
+      </Button>
 
       {/* Hero Header com Glassmorphism */}
       <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 md:p-12 mb-10">

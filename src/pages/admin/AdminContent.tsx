@@ -1,7 +1,9 @@
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminTable } from "@/pages/admin/components/AdminTable";
-import { FileText, Calendar, Users, BookOpen, Globe, Building2, Baby, MessageSquareHeart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { NavLink } from "@/components/NavLink";
+import { FileText, Calendar, Users, BookOpen, Globe, Building2, Baby, MessageSquareHeart, ArrowLeft } from "lucide-react";
 
 export default function AdminContentPage() {
   const tabs = [
@@ -17,6 +19,14 @@ export default function AdminContentPage() {
 
   return (
     <SiteLayout>
+      {/* Botão Voltar */}
+      <Button asChild variant="ghost" className="mb-4 gap-2 text-muted-foreground hover:text-foreground">
+        <NavLink to="/admin">
+          <ArrowLeft className="h-4 w-4" />
+          Voltar ao Painel
+        </NavLink>
+      </Button>
+
       {/* Hero Header com Glassmorphism */}
       <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 md:p-12 mb-10">
         {/* Ícone decorativo */}
