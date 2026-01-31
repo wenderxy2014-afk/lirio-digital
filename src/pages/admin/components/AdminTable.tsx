@@ -64,6 +64,59 @@ export function AdminTable({ table }: { table: TableName }) {
     }
   }, [table]);
 
+  // Mapeamento de nomes de campos para português
+  const fieldLabels: Record<string, string> = {
+    title: "Título",
+    description: "Descrição",
+    starts_at: "Data/Hora de Início",
+    location: "Local",
+    name: "Nome",
+    address: "Endereço",
+    meeting_day: "Dia do Encontro",
+    meeting_time: "Horário",
+    leader_name: "Nome do Líder",
+    coleader_name: "Nome do Colíder",
+    whatsapp: "WhatsApp",
+    email: "E-mail",
+    neighborhood: "Bairro",
+    body: "Conteúdo",
+    theme: "Tema",
+    bible_book: "Livro da Bíblia",
+    author: "Autor",
+    video_url: "URL do Vídeo",
+    download_url: "URL de Download",
+    status: "Status",
+    pix_key: "Chave Pix",
+    contact_whatsapp: "WhatsApp de Contato",
+    contact_email: "E-mail de Contato",
+    person_name: "Nome da Pessoa",
+  };
+
+  // Mapeamento de tabelas para português
+  const tableLabels: Record<string, string> = {
+    events: "Eventos",
+    cells: "Células",
+    devotionals: "Devocionais",
+    studies: "Estudos",
+    missions: "Missões",
+    departments: "Departamentos",
+    kids_contents: "Conteúdo Kids",
+    testimonials: "Testemunhos",
+  };
+
+  const getFieldLabel = (field: string) => fieldLabels[field] || field.replace("_", " ");
+
+  // Tradução de status para português
+  const statusLabels: Record<string, string> = {
+    pending: "Pendente",
+    approved: "Aprovado",
+    rejected: "Rejeitado",
+    active: "Ativo",
+    completed: "Concluído",
+  };
+
+  const getStatusLabel = (status: string) => statusLabels[status] || status;
+
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const openCreate = () => {
@@ -154,7 +207,7 @@ export function AdminTable({ table }: { table: TableName }) {
   return (
     <Card>
       <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <CardTitle className="font-display capitalize">{table.replace("_", " ")}</CardTitle>
+        <CardTitle className="font-display">{tableLabels[table] || table}</CardTitle>
         <div className="flex flex-col gap-2 md:flex-row md:items-center">
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar…" className="md:w-72" />
           <Dialog open={open} onOpenChange={setOpen}>
@@ -168,7 +221,7 @@ export function AdminTable({ table }: { table: TableName }) {
               <div className="grid gap-4">
                 {fields.map((f) => (
                   <div key={f} className="grid gap-2">
-                    <Label className="capitalize">{f.replace("_", " ")}</Label>
+                    <Label>{getFieldLabel(f)}</Label>
                     {f === "body" || f === "description" ? (
                       <Textarea
                         value={draft[f] ?? ""}
@@ -181,8 +234,8 @@ export function AdminTable({ table }: { table: TableName }) {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="active">Ativo</SelectItem>
+                          <SelectItem value="completed">Concluído</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : f === "status" && table === "testimonials" ? (
@@ -191,9 +244,9 @@ export function AdminTable({ table }: { table: TableName }) {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="approved">Approved</SelectItem>
-                          <SelectItem value="rejected">Rejected</SelectItem>
+                          <SelectItem value="pending">Pendente</SelectItem>
+                          <SelectItem value="approved">Aprovado</SelectItem>
+                          <SelectItem value="rejected">Rejeitado</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
@@ -229,7 +282,7 @@ export function AdminTable({ table }: { table: TableName }) {
                   </div>
                   <div className="mt-1 line-clamp-2 text-sm text-muted-foreground">{row.description ?? row.body ?? row.location ?? ""}</div>
                   {table === "testimonials" && (
-                    <div className="mt-2 text-xs text-muted-foreground capitalize">Status: {row.status}</div>
+                    <div className="mt-2 text-xs text-muted-foreground">Status: {getStatusLabel(row.status)}</div>
                   )}
                 </div>
 
