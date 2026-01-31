@@ -1,7 +1,6 @@
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSettings } from "@/data/queries";
-import { QRCodeCanvas } from "qrcode.react";
 import { Wallet, QrCode, Copy, Check, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -117,7 +116,11 @@ export default function OfferingsPage() {
               <div className="absolute -bottom-2 -right-2 h-6 w-6 rounded-tl-2xl border-l-2 border-t-2 border-primary" />
 
               <div className="rounded-2xl bg-white p-4">
-                <QRCodeCanvas value={pixKey || "SUA-CHAVE-PIX-AQUI"} size={200} includeMargin />
+                <img
+                  src="/qrcode-pix.png"
+                  alt="QR Code Pix"
+                  className="w-[200px] h-[200px] object-contain"
+                />
               </div>
             </div>
 
