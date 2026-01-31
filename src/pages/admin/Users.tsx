@@ -312,39 +312,67 @@ export default function UsersPage() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <header className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-display text-3xl flex items-center gap-2">
-            <UsersIcon className="h-8 w-8" />
-            Usuários Administrativos
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Gerencie usuários e suas permissões de acesso
-          </p>
+      {/* Hero Header com Glassmorphism */}
+      <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 md:p-12 mb-10">
+        {/* Ícone decorativo */}
+        <div className="absolute right-8 top-8 text-primary/10">
+          <UsersIcon className="h-32 w-32 md:h-40 md:w-40" />
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)} disabled={!isAdmin}>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Novo Usuário
-        </Button>
+
+        <div className="relative z-10 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary backdrop-blur">
+              <UsersIcon className="h-4 w-4" />
+              Gerenciamento de Acesso
+            </div>
+            <h1 className="mt-4 font-display text-4xl font-bold text-foreground md:text-5xl">
+              Usuários Administrativos
+            </h1>
+            <p className="mt-3 max-w-xl text-lg text-muted-foreground">
+              Gerencie usuários e suas permissões de acesso ao painel.
+            </p>
+          </div>
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            disabled={!isAdmin}
+            className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02]"
+            size="lg"
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            Novo Usuário
+          </Button>
+        </div>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Usuários Administrativos</CardTitle>
+      <Card className="overflow-hidden border-0 bg-gradient-to-br from-card via-card to-primary/5 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 font-display text-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg">
+              <UsersIcon className="h-5 w-5" />
+            </div>
+            Lista de Usuários
+          </CardTitle>
           <CardDescription>
             {adminUsers?.length || 0} usuário(s) cadastrado(s)
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-6 p-4 bg-muted/50 rounded-lg border border-dashed border-muted-foreground/25">
-            <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-primary" /> Diagnóstico de Acesso
+          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10">
+                <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+              </div>
+              Diagnóstico de Acesso
             </h3>
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p><strong>Usuário Logado:</strong> {user?.email || "Não identificado"}</p>
-              <p><strong>ID:</strong> {user?.id}</p>
-              <p><strong>Total Carregado:</strong> {adminUsers?.length || 0} registros</p>
-              <p><strong>Status Carregamento:</strong> {isLoading ? "Carregando..." : "Concluído"}</p>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="rounded-lg bg-background/80 p-2.5 backdrop-blur">
+                <span className="text-muted-foreground">Usuário:</span>
+                <p className="font-medium text-foreground truncate">{user?.email || "Não identificado"}</p>
+              </div>
+              <div className="rounded-lg bg-background/80 p-2.5 backdrop-blur">
+                <span className="text-muted-foreground">Total:</span>
+                <p className="font-medium text-foreground">{adminUsers?.length || 0} usuário(s)</p>
+              </div>
             </div>
           </div>
 

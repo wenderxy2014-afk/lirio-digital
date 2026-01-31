@@ -241,15 +241,26 @@ export default function DevotionalAIPage() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <header className="mb-6">
-        <h1 className="font-display text-3xl flex items-center gap-2">
-          <Sparkles className="h-8 w-8" />
-          Geração de Devocionais com IA
-        </h1>
-        <p className="mt-2 text-muted-foreground flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          {today}
-        </p>
+      {/* Hero Header com Glassmorphism */}
+      <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 md:p-12 mb-10">
+        {/* Ícone decorativo */}
+        <div className="absolute right-8 top-8 text-primary/10">
+          <Sparkles className="h-32 w-32 md:h-40 md:w-40" />
+        </div>
+
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary backdrop-blur">
+            <Sparkles className="h-4 w-4" />
+            Inteligência Artificial
+          </div>
+          <h1 className="mt-4 font-display text-4xl font-bold text-foreground md:text-5xl">
+            Geração de Devocionais com IA
+          </h1>
+          <p className="mt-3 max-w-xl text-lg text-muted-foreground flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            {today}
+          </p>
+        </div>
       </header>
 
       <Tabs defaultValue="generate" className="space-y-6">
