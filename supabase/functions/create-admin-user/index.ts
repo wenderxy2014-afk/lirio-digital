@@ -16,6 +16,12 @@
    }
  
    try {
+      // IMPORTANT:
+      // Password reset links must always point to the public domain.
+      // Using req.headers.get("origin") breaks when the request is triggered from the editor domain
+      // (*.lovableproject.com), causing otp_expired/access_denied issues.
+      const CUSTOM_PUBLIC_ORIGIN = "https://www.liriobh.com";
+
      const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
  
@@ -204,7 +210,7 @@
      // Send password reset email if requested
      if (sendEmail) {
        const { error: resetError } = await admin.auth.resetPasswordForEmail(email, {
-         redirectTo: `${req.headers.get("origin")}/auth/reset-password`,
+          redirectTo: `${CUSTOM_PUBLIC_ORIGIN}/auth/reset-password`,
        });
  
        if (resetError) {
