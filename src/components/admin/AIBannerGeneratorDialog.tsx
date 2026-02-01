@@ -56,7 +56,7 @@ export function AIBannerGeneratorDialog({ open, onOpenChange, onGenerated, defau
 
   return (
     <Dialog open={open} onOpenChange={(v) => !gen.isPending && onOpenChange(v)}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
@@ -67,7 +67,7 @@ export function AIBannerGeneratorDialog({ open, onOpenChange, onGenerated, defau
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className="space-y-5 overflow-y-auto pr-1 max-h-[calc(90vh-12rem)]">
           <div className="space-y-2">
             <Label>Tema da imagem</Label>
             <Input value={theme} onChange={(e) => setTheme(e.target.value)} placeholder='Ex.: "Culto da Família"' />
@@ -90,6 +90,7 @@ export function AIBannerGeneratorDialog({ open, onOpenChange, onGenerated, defau
               onUploadComplete={(url) => setLogoUrl(url)}
               folder="ai-logos"
               maxSizeMB={2}
+              aspectClassName="aspect-[16/5]"
             />
             <p className="text-xs text-muted-foreground">
               Se enviada, a IA tentará posicionar uma logo pequena no canto inferior direito.
