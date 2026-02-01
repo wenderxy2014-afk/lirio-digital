@@ -10,6 +10,8 @@ interface ImageUploaderProps {
   bucketName?: string;
   folder?: string;
   maxSizeMB?: number;
+  /** Classe Tailwind para controlar o aspecto do preview/dropzone (ex.: "aspect-video", "aspect-[16/5]") */
+  aspectClassName?: string;
   /** Largura fixa de saída (ex: 1280 para carrossel) */
   targetWidth?: number;
   /** Altura fixa de saída (ex: 720 para carrossel) */
@@ -22,6 +24,7 @@ export function ImageUploader({
   bucketName = "home-images",
   folder = "uploads",
   maxSizeMB = 5,
+  aspectClassName = "aspect-video",
   targetWidth,
   targetHeight,
 }: ImageUploaderProps) {
@@ -196,7 +199,7 @@ export function ImageUploader({
     <div className="space-y-4">
       {previewUrl ? (
         <div className="relative group">
-          <div className="relative aspect-video overflow-hidden rounded-lg border bg-muted">
+          <div className={`relative ${aspectClassName} overflow-hidden rounded-lg border bg-muted`}>
             <img
               src={previewUrl}
               alt="Preview"
@@ -231,7 +234,7 @@ export function ImageUploader({
       ) : (
         <label
           htmlFor={inputId}
-          className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80 transition-colors"
+          className={`flex flex-col items-center justify-center w-full ${aspectClassName} border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80 transition-colors`}
         >
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
             {uploading ? (
