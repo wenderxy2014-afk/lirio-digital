@@ -8,8 +8,51 @@ import { decode as base64Decode } from "https://deno.land/std@0.168.0/encoding/b
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+async function requireAdminOrEditor(req: Request, admin: any) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { ok: false as const, status: 401 as const, error: "Unauthorized" };
+  }
+
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return { ok: false as const, status: 500 as const, error: "Missing backend configuration" };
+  }
+
+  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data, error } = await authClient.auth.getUser(token);
+  const userId = data?.user?.id;
+  if (error || !userId) {
+    return { ok: false as const, status: 401 as const, error: "Unauthorized" };
+  }
+
+  const { data: roles, error: rolesError } = await admin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "editor"])
+    .limit(1);
+
+  if (rolesError) {
+    console.error("banner-image roles check error:", rolesError);
+    return { ok: false as const, status: 500 as const, error: "Falha ao validar permissões." };
+  }
+
+  if (!roles || roles.length === 0) {
+    return { ok: false as const, status: 403 as const, error: "Sem permissão." };
+  }
+
+  return { ok: true as const, userId };
+}
 
 type BannerRequest = {
   theme: string;
@@ -77,6 +120,15 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("Missing LOVABLE_API_KEY");
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Manual auth (verify_jwt=false) + role gate
+    const gate = await requireAdminOrEditor(req, admin);
+    if (!gate.ok) {
+      return new Response(JSON.stringify({ error: gate.error }), {
+        status: gate.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const body = (await req.json().catch(() => ({}))) as Partial<BannerRequest>;
     const theme = String(body.theme ?? "").trim();
