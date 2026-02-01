@@ -788,7 +788,7 @@ export default function HomeCMSPage() {
                       <div className="flex flex-col gap-3">
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="brand"
                           size="sm"
                           onClick={() => {
                             setAiSlideIndex(index);
