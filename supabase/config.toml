@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.kids-daily]
 verify_jwt = false
+
+[functions.banner-image]
+verify_jwt = true

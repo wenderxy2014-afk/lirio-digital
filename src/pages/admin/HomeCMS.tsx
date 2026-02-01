@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { ImageUploader } from "@/components/admin/ImageUploader";
+import { AIBannerGeneratorDialog } from "@/components/admin/AIBannerGeneratorDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -134,6 +135,9 @@ export default function HomeCMSPage() {
   const [carouselForm, setCarouselForm] = useState<CarouselContent>({
     slides: [],
   });
+
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiSlideIndex, setAiSlideIndex] = useState<number | null>(null);
 
   // Texts section state
   const [textsForm, setTextsForm] = useState<TextsContent>({
@@ -780,6 +784,21 @@ export default function HomeCMSPage() {
 
                     <div className="space-y-2">
                       <Label>Imagem do Slide</Label>
+
+                      <div className="flex flex-col gap-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setAiSlideIndex(index);
+                            setAiDialogOpen(true);
+                          }}
+                          className="w-fit"
+                        >
+                          Gerar imagem com IA
+                        </Button>
+
                       <ImageUploader
                         currentImageUrl={slide.image_url}
                         onUploadComplete={(url) => {
@@ -791,6 +810,7 @@ export default function HomeCMSPage() {
                         targetWidth={1200}
                         targetHeight={400}
                       />
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         ✅ Imagem será padronizada automaticamente para 1200 x 400 px (panorâmica)
                       </p>
@@ -855,6 +875,23 @@ export default function HomeCMSPage() {
               </form>
             </CardContent>
           </Card>
+
+          <AIBannerGeneratorDialog
+            open={aiDialogOpen}
+            onOpenChange={(v) => {
+              setAiDialogOpen(v);
+              if (!v) setAiSlideIndex(null);
+            }}
+            defaultTheme={aiSlideIndex != null ? carouselForm.slides[aiSlideIndex]?.alt_text : ""}
+            onGenerated={(publicUrl) => {
+              if (aiSlideIndex == null) return;
+              const newSlides = [...carouselForm.slides];
+              newSlides[aiSlideIndex].image_url = publicUrl;
+              setCarouselForm({ ...carouselForm, slides: newSlides });
+              setAiDialogOpen(false);
+              setAiSlideIndex(null);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="texts">
