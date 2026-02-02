@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { EbdBanner } from "@/components/site/EbdBanner";
+import { PastorPearlsBanner } from "@/components/site/PastorPearlsBanner";
 import { WhatsAppFloatingChat } from "@/components/site/WhatsAppFloatingChat";
 import liliesBg from "@/assets/lilies-bg.png";
 
@@ -18,6 +19,7 @@ export function SiteLayout({ children }: { children: React.ReactNode }) {
       <div className="relative z-10">
         <SiteHeader />
         <EbdBanner />
+        <PastorPearlsBanner />
         <main className="mx-auto w-full max-w-6xl px-4 py-10">{children}</main>
         <SiteFooter />
       </div>

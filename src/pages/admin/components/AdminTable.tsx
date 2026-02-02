@@ -96,7 +96,7 @@ export function AdminTable({ table }: { table: TableName }) {
   const tableLabels: Record<string, string> = {
     events: "Eventos",
     cells: "Células",
-    devotionals: "Devocionais",
+    devotionals: "Pérolas do Pastor",
     studies: "Estudos",
     missions: "Missões",
     departments: "Departamentos",

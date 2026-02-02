@@ -19,7 +19,6 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { ImageUploader } from "@/components/admin/ImageUploader";
-import { AIBannerGeneratorDialog } from "@/components/admin/AIBannerGeneratorDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -55,11 +54,6 @@ interface CarouselContent {
     link?: string;
     order?: number;
   }>;
-}
-
-interface TextsContent {
-  next_steps_title: string;
-  next_steps_description: string;
 }
 
 export default function HomeCMSPage() {
@@ -136,15 +130,6 @@ export default function HomeCMSPage() {
     slides: [],
   });
 
-  const [aiDialogOpen, setAiDialogOpen] = useState(false);
-  const [aiSlideIndex, setAiSlideIndex] = useState<number | null>(null);
-
-  // Texts section state
-  const [textsForm, setTextsForm] = useState<TextsContent>({
-    next_steps_title: "",
-    next_steps_description: "",
-  });
-
   // Ticker section state
   const [tickerForm, setTickerForm] = useState<TickerConfig>(defaultTickerConfig);
 
@@ -192,9 +177,6 @@ export default function HomeCMSPage() {
       }));
       setCarouselForm({ slides: resolvedSlides });
     }
-    if (homeContent?.texts) {
-      setTextsForm(homeContent.texts);
-    }
     if (homeContent?.ticker) {
       setTickerForm(homeContent.ticker);
     }
@@ -225,7 +207,10 @@ export default function HomeCMSPage() {
       </Breadcrumb>
 
       {/* Botão Voltar */}
-      <Button asChild variant="ghost" className="mb-4 gap-2 text-muted-foreground hover:text-foreground">
+      <Button
+        asChild
+        className="mb-4 gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 hover:from-indigo-600 hover:to-purple-700 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 border-0"
+      >
         <NavLink to="/admin">
           <ArrowLeft className="h-4 w-4" />
           Voltar ao Painel
@@ -254,26 +239,34 @@ export default function HomeCMSPage() {
       </header>
 
       <Tabs defaultValue="ticker" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="ticker">
+        <TabsList className="grid w-full grid-cols-4 gap-2 bg-transparent p-1">
+          <TabsTrigger
+            value="ticker"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-amber-500/30 bg-card border border-border/50 hover:bg-amber-50 hover:border-amber-300 transition-all duration-300"
+          >
             <Megaphone className="h-4 w-4 mr-2" />
             Letreiro
           </TabsTrigger>
-          <TabsTrigger value="hero">
+          <TabsTrigger
+            value="hero"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-sky-500 data-[state=active]:to-blue-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-sky-500/30 bg-card border border-border/50 hover:bg-sky-50 hover:border-sky-300 transition-all duration-300"
+          >
             <Type className="h-4 w-4 mr-2" />
             Hero
           </TabsTrigger>
-          <TabsTrigger value="buttons">
+          <TabsTrigger
+            value="buttons"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-emerald-500/30 bg-card border border-border/50 hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-300"
+          >
             <MousePointerClick className="h-4 w-4 mr-2" />
             Botões
           </TabsTrigger>
-          <TabsTrigger value="carousel">
+          <TabsTrigger
+            value="carousel"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-rose-500/30 bg-card border border-border/50 hover:bg-rose-50 hover:border-rose-300 transition-all duration-300"
+          >
             <Image className="h-4 w-4 mr-2" />
             Carrossel
-          </TabsTrigger>
-          <TabsTrigger value="texts">
-            <Type className="h-4 w-4 mr-2" />
-            Textos
           </TabsTrigger>
         </TabsList>
 
@@ -784,21 +777,6 @@ export default function HomeCMSPage() {
 
                     <div className="space-y-2">
                       <Label>Imagem do Slide</Label>
-
-                      <div className="flex flex-col gap-3">
-                        <Button
-                          type="button"
-                          variant="brand"
-                          size="sm"
-                          onClick={() => {
-                            setAiSlideIndex(index);
-                            setAiDialogOpen(true);
-                          }}
-                          className="w-fit"
-                        >
-                          Gerar imagem com IA
-                        </Button>
-
                       <ImageUploader
                         currentImageUrl={slide.image_url}
                         onUploadComplete={(url) => {
@@ -810,7 +788,6 @@ export default function HomeCMSPage() {
                         targetWidth={1200}
                         targetHeight={400}
                       />
-                      </div>
                       <p className="text-xs text-muted-foreground">
                         ✅ Imagem será padronizada automaticamente para 1200 x 400 px (panorâmica)
                       </p>
@@ -875,79 +852,9 @@ export default function HomeCMSPage() {
               </form>
             </CardContent>
           </Card>
-
-          <AIBannerGeneratorDialog
-            open={aiDialogOpen}
-            onOpenChange={(v) => {
-              setAiDialogOpen(v);
-              if (!v) setAiSlideIndex(null);
-            }}
-            defaultTheme={aiSlideIndex != null ? carouselForm.slides[aiSlideIndex]?.alt_text : ""}
-            onGenerated={(publicUrl) => {
-              if (aiSlideIndex == null) return;
-              const newSlides = [...carouselForm.slides];
-              newSlides[aiSlideIndex].image_url = publicUrl;
-              setCarouselForm({ ...carouselForm, slides: newSlides });
-              setAiDialogOpen(false);
-              setAiSlideIndex(null);
-            }}
-          />
         </TabsContent>
 
-        <TabsContent value="texts">
-          <Card>
-            <CardHeader>
-              <CardTitle>Textos Gerais</CardTitle>
-              <CardDescription>
-                Edite os textos informativos da página
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  saveMutation.mutate({ section: "texts", content: textsForm });
-                }}
-                className="space-y-6"
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="next-steps-title">Título "Próximos Passos"</Label>
-                  <Input
-                    id="next-steps-title"
-                    value={textsForm.next_steps_title}
-                    onChange={(e) => setTextsForm({ ...textsForm, next_steps_title: e.target.value })}
-                    placeholder="Próximos passos"
-                  />
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="next-steps-description">Descrição "Próximos Passos"</Label>
-                  <Textarea
-                    id="next-steps-description"
-                    value={textsForm.next_steps_description}
-                    onChange={(e) => setTextsForm({ ...textsForm, next_steps_description: e.target.value })}
-                    placeholder="Ajuste textos oficiais, contatos..."
-                    rows={4}
-                  />
-                </div>
-
-                <Button type="submit" disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Salvar Textos
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </SiteLayout>
   );

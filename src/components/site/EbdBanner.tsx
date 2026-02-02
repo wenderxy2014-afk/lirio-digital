@@ -22,11 +22,11 @@ export function EbdBanner() {
           />
 
           <div className="relative z-10 min-w-0">
-            <div className="flex items-center gap-2 text-xs/6 opacity-90">
+            <div className="flex items-center gap-2 text-base md:text-lg font-bold">
               <BookOpen className="h-4 w-4" />
               <span>Devocional do dia (EBD)</span>
             </div>
-            <div className="mt-1 line-clamp-1 font-display text-base md:text-lg">
+            <div className="mt-1 line-clamp-1 font-display text-sm md:text-base opacity-90">
               {data?.title ?? "Abrir devocional de hoje"}
             </div>
           </div>

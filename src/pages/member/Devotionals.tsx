@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { NavLink } from "@/components/NavLink";
 import { useDevotionals } from "@/data/queries";
+import { Crown } from "lucide-react";
 
 export default function DevotionalsPage() {
   const { data } = useDevotionals();
@@ -21,10 +22,14 @@ export default function DevotionalsPage() {
   return (
     <SiteLayout>
       <header className="text-left">
-        <h1 className="font-display text-3xl">Devocionais</h1>
-        <p className="mt-2 text-muted-foreground">Filtre por tema, livro ou palavra-chave.</p>
+        <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-2 text-sm font-medium text-emerald-700 backdrop-blur mb-4">
+          <Crown className="h-4 w-4" />
+          Ensinamentos do Pastor
+        </div>
+        <h1 className="font-display text-3xl">Pérolas do Pastor</h1>
+        <p className="mt-2 text-muted-foreground">Mensagens e sermões do nosso pastor para edificar sua vida espiritual.</p>
         <div className="mt-4 max-w-md">
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar…" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por tema ou palavra-chave..." />
         </div>
       </header>
 
@@ -51,7 +56,7 @@ export default function DevotionalsPage() {
         ))}
 
         {(!filtered || filtered.length === 0) && (
-          <div className="rounded-3xl border bg-card p-6 text-left text-muted-foreground">Nenhum devocional encontrado.</div>
+          <div className="rounded-3xl border bg-card p-6 text-left text-muted-foreground">Nenhuma pérola encontrada. O pastor ainda não publicou nenhum ensinamento.</div>
         )}
       </section>
     </SiteLayout>

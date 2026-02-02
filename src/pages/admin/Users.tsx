@@ -314,7 +314,10 @@ export default function UsersPage() {
       </Breadcrumb>
 
       {/* Botão Voltar */}
-      <Button asChild variant="ghost" className="mb-4 gap-2 text-muted-foreground hover:text-foreground">
+      <Button
+        asChild
+        className="mb-4 gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 hover:from-indigo-600 hover:to-purple-700 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 border-0"
+      >
         <NavLink to="/admin">
           <ArrowLeft className="h-4 w-4" />
           Voltar ao Painel

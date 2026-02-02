@@ -1,15 +1,16 @@
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminTable } from "@/pages/admin/components/AdminTable";
+import { PastorPearlsAdmin } from "@/pages/admin/components/PastorPearlsAdmin";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
-import { FileText, Calendar, Users, BookOpen, Globe, Building2, Baby, MessageSquareHeart, ArrowLeft } from "lucide-react";
+import { FileText, Calendar, Users, Crown, Globe, Building2, Baby, MessageSquareHeart, ArrowLeft } from "lucide-react";
 
 export default function AdminContentPage() {
   const tabs = [
     { value: "events", label: "Eventos", icon: Calendar, table: "events" },
     { value: "cells", label: "Células", icon: Users, table: "cells" },
-    { value: "devotionals", label: "Devocionais", icon: BookOpen, table: "devotionals" },
+    { value: "devotionals", label: "Pérolas do Pastor", icon: Crown, table: "devotionals", custom: true },
     { value: "studies", label: "Estudos", icon: FileText, table: "studies" },
     { value: "missions", label: "Missões", icon: Globe, table: "missions" },
     { value: "departments", label: "Departamentos", icon: Building2, table: "departments" },
@@ -20,7 +21,10 @@ export default function AdminContentPage() {
   return (
     <SiteLayout>
       {/* Botão Voltar */}
-      <Button asChild variant="ghost" className="mb-4 gap-2 text-muted-foreground hover:text-foreground">
+      <Button
+        asChild
+        className="mb-4 gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 hover:from-indigo-600 hover:to-purple-700 hover:shadow-xl hover:shadow-indigo-500/40 transition-all duration-300 border-0"
+      >
         <NavLink to="/admin">
           <ArrowLeft className="h-4 w-4" />
           Voltar ao Painel
@@ -68,7 +72,11 @@ export default function AdminContentPage() {
           {tabs.map((tab) => (
             <TabsContent key={tab.value} value={tab.value} className="mt-6">
               <div className="rounded-2xl bg-gradient-to-br from-card to-primary/5 p-6 shadow-lg border-0">
-                <AdminTable table={tab.table as "events" | "cells" | "devotionals" | "studies" | "missions" | "departments" | "kids_contents" | "testimonials"} />
+                {tab.custom ? (
+                  <PastorPearlsAdmin />
+                ) : (
+                  <AdminTable table={tab.table as "events" | "cells" | "devotionals" | "studies" | "missions" | "departments" | "kids_contents" | "testimonials"} />
+                )}
               </div>
             </TabsContent>
           ))}
