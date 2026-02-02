@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Crown, Minus, Plus, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HistoryViewer, HistoryItem } from "./HistoryViewer";
 
 // Tipos
 type BannerStyle = "emerald" | "ocean" | "sunset" | "royal" | "rose" | "midnight" | "golden";
@@ -96,6 +97,35 @@ export function PastorPearlsBanner() {
         staleTime: 0,
         refetchOnWindowFocus: true,
     });
+
+    // Buscar histórico de pérolas
+    const { data: historyData } = useQuery({
+        queryKey: ["pastor-pearls-history"],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("devotionals")
+                .select("*")
+                .eq("is_published", true)
+                .order("created_at", { ascending: false })
+                .limit(8); // Busca 8 para garantir 7 anteriores
+
+            if (error) return [];
+            return data;
+        },
+        staleTime: 1000 * 60 * 15, // 15 minutos
+    });
+
+    // Prepara itens de histórico
+    const historyItems: HistoryItem[] = (historyData || [])
+        .filter(item => item.id !== latestPearlFull?.id)
+        .slice(0, 7)
+        .map(item => ({
+            id: item.id,
+            title: item.title,
+            date: item.created_at,
+            content: item.body,
+            subTitle: item.author || undefined
+        }));
 
     // Não mostra o banner se estiver desativado ou não houver pérola publicada
     if (!bannerEnabled || !latestPearlFull) return null;
@@ -242,6 +272,14 @@ export function PastorPearlsBanner() {
                                         </p>
                                     </div>
                                 </div>
+                            )}
+
+                            {/* Botão de Histórico */}
+                            {historyItems.length > 0 && (
+                                <HistoryViewer
+                                    title="Histórico de Pérolas"
+                                    items={historyItems}
+                                />
                             )}
                         </CardContent>
                     </Card>

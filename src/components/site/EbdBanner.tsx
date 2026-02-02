@@ -1,13 +1,27 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useEbdDevotionalToday } from "@/data/ebd";
+import { useEbdDevotionalToday, useEbdDevotionalsList } from "@/data/ebd";
 import { BookOpen, Minus, Plus, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { HistoryViewer, HistoryItem } from "./HistoryViewer";
 
 export function EbdBanner() {
   const { data } = useEbdDevotionalToday();
+  const { data: historyData } = useEbdDevotionalsList(8); // Busca 8 para garantir 7 anteriores
   const [isExpanded, setIsExpanded] = useState(false);
   const [fontSize, setFontSize] = useState(16);
+
+  // Prepara itens do histórico (filtrando o atual se possível)
+  const historyItems: HistoryItem[] = (historyData || [])
+    .filter(item => item.id !== data?.id) // Remove o atual da lista
+    .slice(0, 7) // Pega apenas os 7 últimos anteriores
+    .map(item => ({
+      id: item.id,
+      title: item.title,
+      date: item.created_at || new Date().toISOString(), // Fallback segura
+      content: item.body,
+      subTitle: item.bible_reference || undefined
+    }));
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pt-4">
@@ -67,9 +81,9 @@ export function EbdBanner() {
                 {data.title}
               </h2>
 
-              {data.scripture && (
+              {data.bible_reference && (
                 <p className="text-sm text-pink-600 dark:text-pink-400 font-medium mb-4">
-                  {data.scripture}
+                  {data.bible_reference}
                 </p>
               )}
 
@@ -109,6 +123,15 @@ export function EbdBanner() {
                   </div>
                 </div>
               )}
+
+              {/* Botão de Histórico */}
+              {historyItems.length > 0 && (
+                <HistoryViewer
+                  title="Histórico de Devocionais"
+                  items={historyItems}
+                />
+              )}
+
             </CardContent>
           </Card>
         )}
