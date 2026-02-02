@@ -184,6 +184,70 @@ export type Database = {
         }
         Relationships: []
       }
+      devotional_comments: {
+        Row: {
+          author_name: string | null
+          content: string
+          created_at: string
+          devotional_id: string
+          id: string
+          visitor_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          content: string
+          created_at?: string
+          devotional_id: string
+          id?: string
+          visitor_id: string
+        }
+        Update: {
+          author_name?: string | null
+          content?: string
+          created_at?: string
+          devotional_id?: string
+          id?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devotional_comments_devotional_id_fkey"
+            columns: ["devotional_id"]
+            isOneToOne: false
+            referencedRelation: "devotionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devotional_likes: {
+        Row: {
+          created_at: string
+          devotional_id: string
+          id: string
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          devotional_id: string
+          id?: string
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          devotional_id?: string
+          id?: string
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devotional_likes_devotional_id_fkey"
+            columns: ["devotional_id"]
+            isOneToOne: false
+            referencedRelation: "devotionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devotionals: {
         Row: {
           author: string | null

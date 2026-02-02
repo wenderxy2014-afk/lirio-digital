@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,20 +7,49 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { Textarea } from "@/components/ui/textarea";
-import { Crown, Minus, Plus, Type, BookOpen, ArrowRight, Heart, MessageCircle, Send, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Crown, Minus, Plus, Type, BookOpen, ArrowRight, Heart, MessageCircle, Send } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/providers/AuthProvider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+function getOrCreateVisitorId() {
+  const key = "iblv_visitor_id";
+  try {
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+    const created = crypto.randomUUID();
+    localStorage.setItem(key, created);
+    return created;
+  } catch {
+    // Fallback (sem localStorage)
+    return `anon-${Math.random().toString(16).slice(2)}-${Date.now()}`;
+  }
+}
 
 export default function DevotionalDetailPage() {
   const { id } = useParams();
   const { toast } = useToast();
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [fontSize, setFontSize] = useState(16);
   const [newComment, setNewComment] = useState("");
+  const [authorName, setAuthorName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // NOTE: evitamos acoplamento aos tipos gerados do backend (que podem demorar a atualizar)
+  // e também resolvemos o erro de TS "never" / instantiation deep.
+  const db = supabase as any;
+
+  const visitorId = useMemo(() => getOrCreateVisitorId(), []);
+  const localLikeKey = useMemo(() => (id ? `devotional_like_${id}` : ""), [id]);
+  const locallyLiked = useMemo(() => {
+    if (!localLikeKey) return false;
+    try {
+      return localStorage.getItem(localLikeKey) === "1";
+    } catch {
+      return false;
+    }
+  }, [localLikeKey]);
 
   // Buscar devocional
   const { data, isLoading } = useQuery({
@@ -37,27 +66,25 @@ export default function DevotionalDetailPage() {
   const { data: likesData } = useQuery({
     queryKey: ["devotional-likes", id],
     queryFn: async () => {
-      if (!id) return { count: 0, userLiked: false };
+      if (!id) return { count: 0, liked: false };
 
       // Contar likes
-      const { count } = await supabase
+      const { count } = await db
         .from("devotional_likes")
         .select("*", { count: "exact", head: true })
         .eq("devotional_id", id);
 
-      // Verificar se usuário deu like
-      let userLiked = false;
-      if (user) {
-        const { data: userLike } = await supabase
-          .from("devotional_likes")
-          .select("id")
-          .eq("devotional_id", id)
-          .eq("user_id", user.id)
-          .maybeSingle();
-        userLiked = !!userLike;
-      }
+      // Verificar se ESTE dispositivo já deu like
+      let liked = false;
+      const { data: visitorLike } = await db
+        .from("devotional_likes")
+        .select("id")
+        .eq("devotional_id", id)
+        .eq("visitor_id", visitorId)
+        .maybeSingle();
+      liked = !!visitorLike || locallyLiked;
 
-      return { count: count ?? 0, userLiked };
+      return { count: count ?? 0, liked };
     },
     enabled: !!id,
   });
@@ -67,7 +94,7 @@ export default function DevotionalDetailPage() {
     queryKey: ["devotional-comments", id],
     queryFn: async () => {
       if (!id) return [];
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("devotional_comments")
         .select("*")
         .eq("devotional_id", id)
@@ -81,22 +108,21 @@ export default function DevotionalDetailPage() {
   // Mutation para like/unlike
   const likeMutation = useMutation({
     mutationFn: async () => {
-      if (!user || !id) throw new Error("Faça login para curtir");
+      if (!id) return;
 
-      if (likesData?.userLiked) {
-        // Remove like
-        const { error } = await supabase
-          .from("devotional_likes")
-          .delete()
-          .eq("devotional_id", id)
-          .eq("user_id", user.id);
-        if (error) throw error;
-      } else {
-        // Add like
-        const { error } = await supabase
-          .from("devotional_likes")
-          .insert({ devotional_id: id, user_id: user.id });
-        if (error) throw error;
+      // Sem login: registramos like por "visitor_id".
+      // Observação: não temos "unlike" no backend (sem auth) para evitar abuso.
+      // UX: o clique é idempotente (unique constraint), então repetir não duplica.
+      const { error } = await db
+        .from("devotional_likes")
+        .insert({ devotional_id: id, visitor_id: visitorId });
+
+      // 23505 = unique_violation (já curtiu)
+      if (error && error.code !== "23505") throw error;
+      try {
+        if (localLikeKey) localStorage.setItem(localLikeKey, "1");
+      } catch {
+        // ignore
       }
     },
     onSuccess: () => {
@@ -110,35 +136,22 @@ export default function DevotionalDetailPage() {
   // Mutation para adicionar comentário
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
-      if (!user || !id) throw new Error("Faça login para comentar");
+      if (!id) return;
 
-      const { error } = await supabase
+      const { error } = await db
         .from("devotional_comments")
-        .insert({ devotional_id: id, user_id: user.id, content });
+        .insert({
+          devotional_id: id,
+          visitor_id: visitorId,
+          author_name: authorName.trim() ? authorName.trim() : null,
+          content,
+        });
       if (error) throw error;
     },
     onSuccess: () => {
       setNewComment("");
       queryClient.invalidateQueries({ queryKey: ["devotional-comments", id] });
       toast({ title: "Comentário adicionado!" });
-    },
-    onError: (error: any) => {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // Mutation para deletar comentário
-  const deleteCommentMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      const { error } = await supabase
-        .from("devotional_comments")
-        .delete()
-        .eq("id", commentId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["devotional-comments", id] });
-      toast({ title: "Comentário removido" });
     },
     onError: (error: any) => {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
@@ -162,8 +175,12 @@ export default function DevotionalDetailPage() {
     });
   };
 
-  const getInitials = (userId: string) => {
-    return userId.slice(0, 2).toUpperCase();
+  const getInitials = (nameOrId: string) => {
+    const raw = (nameOrId ?? "").trim();
+    if (!raw) return "?";
+    const parts = raw.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return raw.slice(0, 2).toUpperCase();
   };
 
   return (
@@ -210,10 +227,10 @@ export default function DevotionalDetailPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => likeMutation.mutate()}
-                    disabled={!user || likeMutation.isPending}
-                    className={`gap-2 ${likesData?.userLiked ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-red-500"}`}
+                    disabled={likeMutation.isPending}
+                    className={`gap-2 ${likesData?.liked ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-red-500"}`}
                   >
-                    <Heart className={`h-5 w-5 ${likesData?.userLiked ? "fill-current" : ""}`} />
+                    <Heart className={`h-5 w-5 ${likesData?.liked ? "fill-current" : ""}`} />
                     <span className="font-medium">{likesData?.count ?? 0}</span>
                   </Button>
 
@@ -315,33 +332,43 @@ export default function DevotionalDetailPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Formulário de novo comentário */}
-              {user ? (
-                <div className="space-y-3">
-                  <Textarea
-                    placeholder="Compartilhe sua reflexão sobre esta pérola..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="min-h-[100px] resize-none"
-                  />
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleSubmitComment}
-                      disabled={!newComment.trim() || isSubmitting}
-                      className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
-                    >
-                      <Send className="mr-2 h-4 w-4" />
-                      {isSubmitting ? "Enviando..." : "Enviar Comentário"}
-                    </Button>
+              <div className="space-y-3">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Seu nome (opcional)</div>
+                    <Input
+                      value={authorName}
+                      onChange={(e) => setAuthorName(e.target.value)}
+                      placeholder="Ex.: Maria"
+                      maxLength={60}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">Identificação</div>
+                    <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                      Anônimo (por dispositivo)
+                    </div>
                   </div>
                 </div>
-              ) : (
-                <div className="rounded-xl bg-muted/50 p-4 text-center text-muted-foreground">
-                  <p>Faça login para deixar um comentário</p>
-                  <Button asChild variant="link" className="text-emerald-600">
-                    <NavLink to="/auth">Entrar</NavLink>
+
+                <Textarea
+                  placeholder="Compartilhe sua reflexão sobre esta pérola..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  className="min-h-[100px] resize-none"
+                  maxLength={2000}
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleSubmitComment}
+                    disabled={!newComment.trim() || isSubmitting}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    {isSubmitting ? "Enviando..." : "Enviar Comentário"}
                   </Button>
                 </div>
-              )}
+              </div>
 
               <Separator />
 
@@ -352,24 +379,19 @@ export default function DevotionalDetailPage() {
                     <div key={comment.id} className="flex gap-3 rounded-xl bg-muted/30 p-4">
                       <Avatar className="h-10 w-10 bg-gradient-to-br from-emerald-400 to-teal-500 text-white">
                         <AvatarFallback className="bg-transparent text-xs font-bold">
-                          {getInitials(comment.user_id)}
+                          {getInitials(comment.author_name || comment.visitor_id)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-medium">
+                              {comment.author_name ? comment.author_name : "Anônimo"}
+                            </div>
+                          </div>
                           <span className="text-xs text-muted-foreground">
                             {formatDate(comment.created_at)}
                           </span>
-                          {user?.id === comment.user_id && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                              onClick={() => deleteCommentMutation.mutate(comment.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          )}
                         </div>
                         <p className="mt-1 text-sm whitespace-pre-wrap">{comment.content}</p>
                       </div>
