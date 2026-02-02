@@ -58,10 +58,12 @@ const App = () => (
             <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
             <Route path="/admin/setup" element={<AdminSetupPage />} />
 
+            {/* Rotas públicas das Pérolas do Pastor */}
+            <Route path="/membro/devocionais" element={<DevotionalsPage />} />
+            <Route path="/membro/devocionais/:id" element={<DevotionalDetailPage />} />
+
             <Route element={<RequireAuth />}>
               <Route path="/membro" element={<MemberHomePage />} />
-              <Route path="/membro/devocionais" element={<DevotionalsPage />} />
-              <Route path="/membro/devocionais/:id" element={<DevotionalDetailPage />} />
               <Route path="/membro/estudos" element={<StudiesPage />} />
               <Route path="/membro/estudos/:id" element={<StudyDetailPage />} />
             </Route>
