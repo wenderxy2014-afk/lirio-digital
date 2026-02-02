@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,49 +7,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Crown, Minus, Plus, Type, BookOpen, ArrowRight, Heart, MessageCircle, Send } from "lucide-react";
+import { Crown, Minus, Plus, Type, BookOpen, ArrowRight, Heart, MessageCircle, Send, Trash2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-function getOrCreateVisitorId() {
-  const key = "iblv_visitor_id";
-  try {
-    const existing = localStorage.getItem(key);
-    if (existing) return existing;
-    const created = crypto.randomUUID();
-    localStorage.setItem(key, created);
-    return created;
-  } catch {
-    // Fallback (sem localStorage)
-    return `anon-${Math.random().toString(16).slice(2)}-${Date.now()}`;
-  }
-}
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function DevotionalDetailPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [fontSize, setFontSize] = useState(16);
   const [newComment, setNewComment] = useState("");
-  const [authorName, setAuthorName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // NOTE: evitamos acoplamento aos tipos gerados do backend (que podem demorar a atualizar)
-  // e também resolvemos o erro de TS "never" / instantiation deep.
   const db = supabase as any;
-
-  const visitorId = useMemo(() => getOrCreateVisitorId(), []);
-  const localLikeKey = useMemo(() => (id ? `devotional_like_${id}` : ""), [id]);
-  const locallyLiked = useMemo(() => {
-    if (!localLikeKey) return false;
-    try {
-      return localStorage.getItem(localLikeKey) === "1";
-    } catch {
-      return false;
-    }
-  }, [localLikeKey]);
 
   // Buscar devocional
   const { data, isLoading } = useQuery({
@@ -62,107 +36,178 @@ export default function DevotionalDetailPage() {
     },
   });
 
-  // Buscar likes count
+  // Buscar Likes
   const { data: likesData } = useQuery({
     queryKey: ["devotional-likes", id],
     queryFn: async () => {
-      if (!id) return { count: 0, liked: false };
+      if (!id) return { count: 0, userLiked: false };
 
-      // Contar likes
-      const { count } = await db
-        .from("devotional_likes")
-        .select("*", { count: "exact", head: true })
-        .eq("devotional_id", id);
+      try {
+        // Tenta buscar count (safe way)
+        const { count, error: countError } = await db
+          .from("devotional_likes")
+          .select("*", { count: "exact", head: true })
+          .eq("devotional_id", id);
 
-      // Verificar se ESTE dispositivo já deu like
-      let liked = false;
-      const { data: visitorLike } = await db
-        .from("devotional_likes")
-        .select("id")
-        .eq("devotional_id", id)
-        .eq("visitor_id", visitorId)
-        .maybeSingle();
-      liked = !!visitorLike || locallyLiked;
+        if (countError) {
+          console.warn("Tabela de likes pode não existir ainda:", countError.message);
+          return { count: 0, userLiked: false };
+        }
 
-      return { count: count ?? 0, liked };
+        let userLiked = false;
+        if (user) {
+          const { data: userLike } = await db
+            .from("devotional_likes")
+            .select("id")
+            .eq("devotional_id", id)
+            .eq("user_id", user.id)
+            .maybeSingle();
+          userLiked = !!userLike;
+        }
+
+        return { count: count ?? 0, userLiked };
+      } catch (e) {
+        console.error("Erro ao buscar likes", e);
+        return { count: 0, userLiked: false };
+      }
     },
     enabled: !!id,
+    retry: false
   });
 
-  // Buscar comentários
-  const { data: comments } = useQuery({
-    queryKey: ["devotional-comments", id],
-    queryFn: async () => {
-      if (!id) return [];
-      const { data, error } = await db
-        .from("devotional_comments")
-        .select("*")
-        .eq("devotional_id", id)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: !!id,
-  });
-
-  // Mutation para like/unlike
+  // Mutation Like
   const likeMutation = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error("Faça login para curtir");
       if (!id) return;
 
-      // Sem login: registramos like por "visitor_id".
-      // Observação: não temos "unlike" no backend (sem auth) para evitar abuso.
-      // UX: o clique é idempotente (unique constraint), então repetir não duplica.
-      const { error } = await db
-        .from("devotional_likes")
-        .insert({ devotional_id: id, visitor_id: visitorId });
-
-      // 23505 = unique_violation (já curtiu)
-      if (error && error.code !== "23505") throw error;
-      try {
-        if (localLikeKey) localStorage.setItem(localLikeKey, "1");
-      } catch {
-        // ignore
+      if (likesData?.userLiked) {
+        // Remove like
+        const { error } = await db
+          .from("devotional_likes")
+          .delete()
+          .eq("devotional_id", id)
+          .eq("user_id", user.id);
+        if (error) throw error;
+      } else {
+        // Add like
+        const { error } = await db
+          .from("devotional_likes")
+          .insert({ devotional_id: id, user_id: user.id });
+        if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["devotional-likes", id] });
     },
-    onError: (error: any) => {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    },
+    onError: (error) => {
+      toast({
+        title: "Erro",
+        description: "Não foi possível registrar seu like. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   });
 
-  // Mutation para adicionar comentário
+  // Buscar Comentários
+  const { data: comments } = useQuery({
+    queryKey: ["devotional-comments", id],
+    queryFn: async () => {
+      if (!id) return [];
+      try {
+        const { data, error } = await db
+          .from("devotional_comments")
+          .select(`
+            id,
+            content,
+            created_at,
+            user_id
+          `)
+          .eq("devotional_id", id)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.warn("Tabela comentários erro:", error.message);
+          return [];
+        }
+
+        // Buscar emails/nomes dos usuários manualmente para não depender de view complexa
+        if (data && data.length > 0) {
+          return data;
+          // Nota: Num app real, faríamos join com profiles, ou usariamos metadata. 
+          // Por enquanto, vamos mostrar iniciais baseadas no ID ou algo genérico se não tiver profile publico.
+        }
+        return [];
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
+    },
+    enabled: !!id,
+    retry: false
+  });
+
+  // Adicionar Comentário
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
+      if (!user) throw new Error("Faça login para comentar");
       if (!id) return;
 
       const { error } = await db
         .from("devotional_comments")
         .insert({
           devotional_id: id,
-          visitor_id: visitorId,
-          author_name: authorName.trim() ? authorName.trim() : null,
-          content,
+          user_id: user.id,
+          content
         });
+
       if (error) throw error;
     },
     onSuccess: () => {
       setNewComment("");
       queryClient.invalidateQueries({ queryKey: ["devotional-comments", id] });
-      toast({ title: "Comentário adicionado!" });
+      toast({ title: "Comentário enviado!" });
     },
-    onError: (error: any) => {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
-    },
+    onError: () => {
+      toast({ title: "Erro ao enviar comentário", variant: "destructive" });
+    }
   });
 
-  const handleSubmitComment = async () => {
+  // Deletar Comentário
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      const { error } = await db
+        .from("devotional_comments")
+        .delete()
+        .eq("id", commentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["devotional-comments", id] });
+      toast({ title: "Comentário removido" });
+    }
+  });
+
+  const handleLike = () => {
+    if (!user) {
+      toast({ title: "Faça login para curtir", variant: "destructive" });
+      return;
+    }
+    likeMutation.mutate();
+  };
+
+  const handleCommentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast({ title: "Faça login para comentar", variant: "destructive" });
+      return;
+    }
     if (!newComment.trim()) return;
+
     setIsSubmitting(true);
-    await addCommentMutation.mutateAsync(newComment.trim());
-    setIsSubmitting(false);
+    addCommentMutation.mutate(newComment, {
+      onSettled: () => setIsSubmitting(false)
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -175,12 +220,10 @@ export default function DevotionalDetailPage() {
     });
   };
 
-  const getInitials = (nameOrId: string) => {
-    const raw = (nameOrId ?? "").trim();
-    if (!raw) return "?";
-    const parts = raw.split(/\s+/).filter(Boolean);
-    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-    return raw.slice(0, 2).toUpperCase();
+  // Safe initials function
+  const getInitials = (userId: string | undefined | null) => {
+    if (!userId) return "??";
+    return userId.slice(0, 2).toUpperCase();
   };
 
   return (
@@ -205,13 +248,26 @@ export default function DevotionalDetailPage() {
           {/* Card Principal */}
           <Card className="overflow-hidden border-0 bg-gradient-to-br from-card via-card to-emerald-500/5 shadow-lg">
             <CardHeader className="pb-4">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-2 text-sm font-medium text-emerald-700 backdrop-blur mb-4 w-fit">
-                <Crown className="h-4 w-4" />
-                Pérola do Pastor
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-4 py-2 text-sm font-medium text-emerald-700 backdrop-blur w-fit">
+                  <Crown className="h-4 w-4" />
+                  Pérola do Pastor
+                </div>
+
+                {/* Like Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`gap-2 rounded-full px-4 ${likesData?.userLiked ? 'text-rose-500 bg-rose-500/10 hover:bg-rose-500/20' : 'text-muted-foreground'}`}
+                  onClick={handleLike}
+                >
+                  <Heart className={`h-5 w-5 ${likesData?.userLiked ? 'fill-current' : ''}`} />
+                  <span className="font-semibold">{likesData?.count || 0}</span>
+                </Button>
               </div>
 
-              <CardTitle className="font-display text-2xl md:text-3xl">{data.title}</CardTitle>
+              <CardTitle className="font-display text-2xl md:text-3xl mt-4">{data.title}</CardTitle>
 
               {data.author && (
                 <div className="text-sm font-medium text-muted-foreground mt-2">{data.author}</div>
@@ -220,28 +276,7 @@ export default function DevotionalDetailPage() {
 
             <CardContent className="text-left">
               {/* Controles de Tamanho de Fonte */}
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-4">
-                  {/* Likes */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => likeMutation.mutate()}
-                    disabled={likeMutation.isPending}
-                    className={`gap-2 ${likesData?.liked ? "text-red-500 hover:text-red-600" : "text-muted-foreground hover:text-red-500"}`}
-                  >
-                    <Heart className={`h-5 w-5 ${likesData?.liked ? "fill-current" : ""}`} />
-                    <span className="font-medium">{likesData?.count ?? 0}</span>
-                  </Button>
-
-                  {/* Comments count */}
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MessageCircle className="h-5 w-5" />
-                    <span className="font-medium">{comments?.length ?? 0}</span>
-                  </div>
-                </div>
-
-                {/* Font size controls */}
+              <div className="flex flex-wrap items-center justify-end gap-4 mb-4">
                 <div className="flex h-9 items-center gap-1 rounded-xl border bg-background/80 p-1.5 backdrop-blur shadow-sm">
                   <Button
                     variant="ghost"
@@ -323,84 +358,85 @@ export default function DevotionalDetailPage() {
           </Card>
 
           {/* Seção de Comentários */}
-          <Card className="border-0 shadow-lg">
+          <Card className="border-0 shadow-lg bg-card mt-8">
             <CardHeader>
-              <CardTitle className="font-display text-xl flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-emerald-600" />
-                Comentários ({comments?.length ?? 0})
+              <CardTitle className="text-xl flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Comentários ({comments?.length || 0})
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Formulário de novo comentário */}
-              <div className="space-y-3">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Seu nome (opcional)</div>
-                    <Input
-                      value={authorName}
-                      onChange={(e) => setAuthorName(e.target.value)}
-                      placeholder="Ex.: Maria"
-                      maxLength={60}
+            <CardContent>
+              {/* Form de Comentário */}
+              {user ? (
+                <form onSubmit={handleCommentSubmit} className="flex gap-2 mb-8">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                      {getInitials(user.id)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 gap-2 flex flex-col sm:flex-row">
+                    <Textarea
+                      placeholder="Compartilhe o que Deus falou ao seu coração..."
+                      className="min-h-[80px] resize-none"
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
                     />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      className="h-10 w-10 shrink-0 self-end sm:self-auto bg-emerald-500 hover:bg-emerald-600"
+                      disabled={isSubmitting || !newComment.trim()}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium">Identificação</div>
-                    <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                      Anônimo (por dispositivo)
-                    </div>
-                  </div>
+                </form>
+              ) : (
+                <div className="bg-muted/50 rounded-xl p-4 text-center mb-8 border border-dashed">
+                  <p className="text-sm text-muted-foreground">
+                    <NavLink to="/auth" className="text-emerald-600 hover:underline font-medium">Faça login</NavLink> para deixar seu comentário.
+                  </p>
                 </div>
+              )}
 
-                <Textarea
-                  placeholder="Compartilhe sua reflexão sobre esta pérola..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="min-h-[100px] resize-none"
-                  maxLength={2000}
-                />
-                <div className="flex justify-end">
-                  <Button
-                    onClick={handleSubmitComment}
-                    disabled={!newComment.trim() || isSubmitting}
-                    className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    {isSubmitting ? "Enviando..." : "Enviar Comentário"}
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Lista de comentários */}
-              <div className="space-y-4">
-                {comments && comments.length > 0 ? (
-                  comments.map((comment: any) => (
-                    <div key={comment.id} className="flex gap-3 rounded-xl bg-muted/30 p-4">
-                      <Avatar className="h-10 w-10 bg-gradient-to-br from-emerald-400 to-teal-500 text-white">
-                        <AvatarFallback className="bg-transparent text-xs font-bold">
-                          {getInitials(comment.author_name || comment.visitor_id)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-medium">
-                              {comment.author_name ? comment.author_name : "Anônimo"}
-                            </div>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDate(comment.created_at)}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-sm whitespace-pre-wrap">{comment.content}</p>
+              {/* Lista de Comentários */}
+              <div className="space-y-6">
+                {comments?.map((comment: any) => (
+                  <div key={comment.id} className="flex gap-4 group">
+                    <Avatar className="h-8 w-8 mt-1">
+                      <AvatarFallback className="text-xs">
+                        {getInitials(comment.user_id)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-foreground/80">
+                          Irmão(ã)
+                        </span>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {formatDate(comment.created_at)}
+                        </span>
                       </div>
+                      <p className="text-sm text-foreground/90 leading-relaxed bg-muted/30 p-3 rounded-r-xl rounded-bl-xl">
+                        {comment.content}
+                      </p>
+
+                      {user && user.id === comment.user_id && (
+                        <button
+                          onClick={() => deleteCommentMutation.mutate(comment.id)}
+                          className="text-xs text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity hover:underline flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Excluir
+                        </button>
+                      )}
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center text-muted-foreground py-8">
-                    <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                    <p>Seja o primeiro a comentar!</p>
+                  </div>
+                ))}
+
+                {comments?.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground opacity-60">
+                    Seja o primeiro a comentar!
                   </div>
                 )}
               </div>
