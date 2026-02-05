@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useEbdDevotionalToday, useEbdDevotionalsList } from "@/data/ebd";
-import { BookOpen, Minus, Plus, Type } from "lucide-react";
+import { BookOpen, Minus, Plus, Type, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { HistoryViewer, HistoryItem } from "./HistoryViewer";
+import { NavLink } from "@/components/NavLink";
+import { HistoryItem } from "./HistoryViewer";
 
 export function EbdBanner() {
   const { data } = useEbdDevotionalToday();
@@ -124,12 +125,14 @@ export function EbdBanner() {
                 </div>
               )}
 
-              {/* Botão de Histórico */}
+              {/* Botão de Histórico - Redireciona para página EBD */}
               {historyItems.length > 0 && (
-                <HistoryViewer
-                  title="Histórico de Devocionais"
-                  items={historyItems}
-                />
+                <NavLink to="/ebd">
+                  <Button className="mt-6 w-full gap-2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-md transition-all hover:-translate-y-0.5">
+                    <History className="h-4 w-4" />
+                    Ver postagens anteriores
+                  </Button>
+                </NavLink>
               )}
 
             </CardContent>
