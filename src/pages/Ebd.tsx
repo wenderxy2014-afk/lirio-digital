@@ -1,16 +1,9 @@
-import { SiteLayout } from "@/components/site/SiteLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { useEbdDevotionalToday, useEbdDevotionalsList } from "@/data/ebd";
-import { useState } from "react";
-import { Minus, Plus, Type, ChevronDown, ChevronUp, Trash2, BookOpen, Calendar, Sparkles } from "lucide-react";
-import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { HistoryViewer } from "@/components/site/HistoryViewer";
+
+// ... existing imports ...
 
 export default function EbdPage() {
+  // ... existing hooks ...
   const { data: today, isLoading } = useEbdDevotionalToday();
   const { data: listData } = useEbdDevotionalsList(10);
   const { roles, user } = useAuth();
@@ -20,8 +13,9 @@ export default function EbdPage() {
 
   const canManage = hasAnyRole(roles, ["admin", "editor"]);
 
-  // Filter out today's devotional, duplicates by title, AND the specific repetitive title
+  // Filter logic...
   const pastList = listData?.reduce((acc: any[], current) => {
+    // ... filtering logic ...
     const isToday = current.id === today?.id;
     const isDuplicate = acc.some(item => item.title === current.title);
     const isSameAsToday = today?.title === current.title;
@@ -34,7 +28,16 @@ export default function EbdPage() {
     return acc;
   }, []).slice(0, 7);
 
+  const historyItems = pastList?.map(devotional => ({
+    id: devotional.id,
+    title: devotional.title,
+    date: devotional.day,
+    content: devotional.body,
+    subTitle: devotional.bible_reference || undefined
+  })) || [];
+
   const handleCleanHistory = async () => {
+    // ... existing handler ...
     if (!user) {
       toast({
         title: "Acesso Negado",
@@ -77,10 +80,9 @@ export default function EbdPage() {
 
   return (
     <SiteLayout>
-      {/* Hero Header com Glassmorphism */}
+      {/* ... Header ... */}
       <header className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8 md:p-12">
-
-        {/* Ícone decorativo */}
+        {/* ... Header Content ... */}
         <div className="absolute right-8 top-8 text-primary/10">
           <BookOpen className="h-32 w-32 md:h-40 md:w-40" />
         </div>
@@ -145,25 +147,14 @@ export default function EbdPage() {
           </Card>
         )}
 
-        {/* Lista de Anteriores */}
-        {pastList && pastList.length > 0 && (
-          <div className="mt-12">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                <Calendar className="h-5 w-5 text-primary" />
-              </div>
-              <h2 className="font-display text-2xl font-bold text-foreground">Últimos 7 dias</h2>
-            </div>
-            <div className="flex flex-col gap-4">
-              {pastList.map((devotional) => (
-                <DevotionalCard
-                  key={devotional.id}
-                  devotional={devotional}
-                  defaultExpanded={false}
-                />
-              ))}
-            </div>
-          </div>
+        {/* Botão de Histórico (Anteriores) */}
+        {!isLoading && historyItems.length > 0 && (
+          <HistoryViewer
+            title="Postagens Anteriores"
+            items={historyItems}
+            triggerText="Ver postagens anteriores"
+            triggerClassName="w-full bg-card hover:bg-accent border text-foreground"
+          />
         )}
       </section>
     </SiteLayout>
