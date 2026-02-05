@@ -1,9 +1,17 @@
+import { SiteLayout } from "@/components/site/SiteLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { useEbdDevotionalToday, useEbdDevotionalsList } from "@/data/ebd";
+import { useState } from "react";
+import { Minus, Plus, Type, ChevronDown, ChevronUp, Trash2, BookOpen, Calendar, Sparkles } from "lucide-react";
+import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 import { HistoryViewer } from "@/components/site/HistoryViewer";
 
-// ... existing imports ...
-
 export default function EbdPage() {
-  // ... existing hooks ...
   const { data: today, isLoading } = useEbdDevotionalToday();
   const { data: listData } = useEbdDevotionalsList(10);
   const { roles, user } = useAuth();
