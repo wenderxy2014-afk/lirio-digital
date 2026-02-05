@@ -7,10 +7,13 @@ import { NavLink } from "@/components/NavLink";
 import { HistoryItem } from "./HistoryViewer";
 
 export function EbdBanner() {
-  const { data } = useEbdDevotionalToday();
-  const { data: historyData } = useEbdDevotionalsList(8); // Busca 8 para garantir 7 anteriores
+  const { data, isLoading, isFetching } = useEbdDevotionalToday();
+  const { data: historyData, isLoading: isLoadingHistory, isFetching: isFetchingHistory } = useEbdDevotionalsList(8); // Busca 8 para garantir 7 anteriores
   const [isExpanded, setIsExpanded] = useState(false);
   const [fontSize, setFontSize] = useState(16);
+
+  // Check if any data is being loaded or revalidated
+  const isRefreshing = isLoading || isFetching || isLoadingHistory || isFetchingHistory;
 
   // Prepara itens do histórico (filtrando o atual se possível)
   const historyItems: HistoryItem[] = (historyData || [])
@@ -61,7 +64,25 @@ export function EbdBanner() {
         className={`overflow-hidden transition-all duration-500 ease-in-out ${isExpanded ? "max-h-[2000px] opacity-100 mt-4" : "max-h-0 opacity-0 mt-0"
           }`}
       >
-        {data && (
+        {/* Show skeleton while loading/refreshing */}
+        {isRefreshing && isExpanded && (
+          <Card className="overflow-hidden border-0 bg-gradient-to-br from-card via-card to-pink-500/5 shadow-lg p-8">
+            <div className="animate-pulse space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-muted" />
+                <div className="space-y-2">
+                  <div className="h-4 w-32 rounded bg-muted" />
+                  <div className="h-3 w-24 rounded bg-muted" />
+                </div>
+              </div>
+              <div className="h-6 w-3/4 rounded bg-muted" />
+              <div className="h-4 w-1/4 rounded bg-muted" />
+              <div className="h-48 w-full rounded-2xl bg-muted" />
+            </div>
+          </Card>
+        )}
+
+        {!isRefreshing && data && (
           <Card className="overflow-hidden border-0 bg-gradient-to-br from-card via-card to-pink-500/5 shadow-lg">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-3">

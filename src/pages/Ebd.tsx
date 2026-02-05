@@ -12,8 +12,11 @@ import { useQueryClient } from "@tanstack/react-query";
 
 
 export default function EbdPage() {
-  const { data: today, isLoading } = useEbdDevotionalToday();
-  const { data: listData } = useEbdDevotionalsList(10);
+  const { data: today, isLoading, isFetching } = useEbdDevotionalToday();
+  const { data: listData, isLoading: isLoadingList, isFetching: isFetchingList } = useEbdDevotionalsList(10);
+
+  // Check if any data is being loaded or revalidated
+  const isRefreshing = isLoading || isFetching || isLoadingList || isFetchingList;
   const { roles, user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -119,7 +122,7 @@ export default function EbdPage() {
       </header>
 
       <section className="mt-10 space-y-8">
-        {isLoading && (
+        {isRefreshing && (
           <div className="flex items-center justify-center rounded-3xl border border-dashed bg-gradient-to-br from-background to-primary/5 p-12">
             <div className="flex items-center gap-3 text-muted-foreground">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -129,7 +132,7 @@ export default function EbdPage() {
         )}
 
         {/* Destaque de Hoje */}
-        {today && !today.title.toUpperCase().includes("[RASCUNHO]") && (
+        {!isRefreshing && today && !today.title.toUpperCase().includes("[RASCUNHO]") && (
           <DevotionalCard
             devotional={today}
             defaultExpanded={true}
@@ -138,7 +141,7 @@ export default function EbdPage() {
           />
         )}
 
-        {!isLoading && (!today || today.title.toUpperCase().includes("[RASCUNHO]")) && (
+        {!isRefreshing && (!today || today.title.toUpperCase().includes("[RASCUNHO]")) && (
           <Card className="overflow-hidden border-0 bg-gradient-to-br from-card to-primary/5 p-8 shadow-lg text-center">
             <div className="flex flex-col items-center">
               <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
@@ -150,7 +153,7 @@ export default function EbdPage() {
         )}
 
         {/* Lista de Anteriores */}
-        {!isLoading && pastList && pastList.length > 0 && (
+        {!isRefreshing && pastList && pastList.length > 0 && (
           <div className="mt-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">

@@ -36,7 +36,7 @@ const Index = () => {
   const { data: settings } = useSettings();
   const { data: events } = useEvents();
   const { data: cells } = useCells();
-  const { data: homeContent, isLoading: isLoadingHome } = useAllHomeContent();
+  const { data: homeContent, isLoading: isLoadingHome, isFetching: isFetchingHome } = useAllHomeContent();
   const { user } = useAuth();
 
   // Extract content with fallbacks
@@ -290,8 +290,8 @@ const Index = () => {
       </section>
 
       <section className="mt-16">
-        {/* Show skeleton while loading to avoid 'flash of old content' */}
-        {isLoadingHome ? (
+        {/* Show skeleton while loading/refetching to avoid 'flash of old content' */}
+        {(isLoadingHome || isFetchingHome) ? (
           <div className="w-full aspect-[21/9] rounded-3xl bg-muted animate-pulse" />
         ) : resolvedCarouselData.length > 0 ? (
           <Carousel
