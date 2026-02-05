@@ -9,7 +9,7 @@ import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { HistoryViewer } from "@/components/site/HistoryViewer";
+
 
 export default function EbdPage() {
   const { data: today, isLoading } = useEbdDevotionalToday();
@@ -36,13 +36,7 @@ export default function EbdPage() {
     return acc;
   }, []).slice(0, 7);
 
-  const historyItems = pastList?.map(devotional => ({
-    id: devotional.id,
-    title: devotional.title,
-    date: devotional.day,
-    content: devotional.body,
-    subTitle: devotional.bible_reference || undefined
-  })) || [];
+
 
   const handleCleanHistory = async () => {
     // ... existing handler ...
@@ -155,14 +149,25 @@ export default function EbdPage() {
           </Card>
         )}
 
-        {/* Botão de Histórico (Anteriores) */}
-        {!isLoading && historyItems.length > 0 && (
-          <HistoryViewer
-            title="Postagens Anteriores"
-            items={historyItems}
-            triggerText="Ver postagens anteriores"
-            triggerClassName="w-full bg-card hover:bg-accent border text-foreground"
-          />
+        {/* Lista de Anteriores */}
+        {!isLoading && pastList && pastList.length > 0 && (
+          <div className="mt-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <h2 className="font-display text-2xl font-bold text-foreground">Últimos 7 dias</h2>
+            </div>
+            <div className="flex flex-col gap-4">
+              {pastList.map((devotional) => (
+                <DevotionalCard
+                  key={devotional.id}
+                  devotional={devotional}
+                  defaultExpanded={false}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </section>
     </SiteLayout>
