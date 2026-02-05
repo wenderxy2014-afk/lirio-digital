@@ -36,7 +36,7 @@ const Index = () => {
   const { data: settings } = useSettings();
   const { data: events } = useEvents();
   const { data: cells } = useCells();
-  const { data: homeContent } = useAllHomeContent();
+  const { data: homeContent, isLoading: isLoadingHome } = useAllHomeContent();
   const { user } = useAuth();
 
   // Extract content with fallbacks
@@ -55,12 +55,8 @@ const Index = () => {
     { label: "Ofertas", url: "/ofertas", variant: "soft" },
   ];
 
-  const carouselData = ((homeContent?.carousel as any)?.slides) || [
-    { image_url: bannerFamilia, alt_text: "Culto da Família", order: 1 },
-    { image_url: bannerMaturidade, alt_text: "Cultura da Maturidade", order: 2 },
-    { image_url: bannerHomens, alt_text: "Culto da Rede de Homens", order: 3 },
-    { image_url: bannerCeia, alt_text: "A Ceia do Senhor", order: 4 },
-  ];
+  // Only use data from the database, no static fallbacks that cause 'flash of old content'
+  const carouselData = ((homeContent?.carousel as any)?.slides) || [];
 
   const tickerData = (homeContent?.ticker as any) || defaultTickerConfig;
 
@@ -294,53 +290,58 @@ const Index = () => {
       </section>
 
       <section className="mt-16">
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          plugins={[
-            Autoplay({
-              delay: 6000,
-            }),
-          ]}
-          className="w-full"
-        >
-          <CarouselContent>
-            {resolvedCarouselData
-              .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
-              .map((slide: any, index: number) => (
-                <CarouselItem key={index}>
-                  {slide.link ? (
-                    <a
-                      href={slide.link}
-                      target={slide.link.startsWith("http") ? "_blank" : "_self"}
-                      rel={slide.link.startsWith("http") ? "noopener noreferrer" : undefined}
-                      className="block relative overflow-hidden rounded-3xl border shadow-lift w-full bg-background transition-all hover:ring-2 hover:ring-primary hover:opacity-95"
-                    >
-                      <img
-                        src={slide.image_url}
-                        alt={slide.alt_text}
-                        loading="lazy"
-                        className="w-full h-auto object-contain"
-                      />
-                    </a>
-                  ) : (
-                    <div className="relative overflow-hidden rounded-3xl border shadow-lift w-full bg-background">
-                      <img
-                        src={slide.image_url}
-                        alt={slide.alt_text}
-                        loading="lazy"
-                        className="w-full h-auto object-contain"
-                      />
-                    </div>
-                  )}
-                </CarouselItem>
-              ))}
-          </CarouselContent>
-          <CarouselPrevious className="left-4" />
-          <CarouselNext className="right-4" />
-        </Carousel>
+        {/* Show skeleton while loading to avoid 'flash of old content' */}
+        {isLoadingHome ? (
+          <div className="w-full aspect-[21/9] rounded-3xl bg-muted animate-pulse" />
+        ) : resolvedCarouselData.length > 0 ? (
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 6000,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent>
+              {resolvedCarouselData
+                .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+                .map((slide: any, index: number) => (
+                  <CarouselItem key={index}>
+                    {slide.link ? (
+                      <a
+                        href={slide.link}
+                        target={slide.link.startsWith("http") ? "_blank" : "_self"}
+                        rel={slide.link.startsWith("http") ? "noopener noreferrer" : undefined}
+                        className="block relative overflow-hidden rounded-3xl border shadow-lift w-full bg-background transition-all hover:ring-2 hover:ring-primary hover:opacity-95"
+                      >
+                        <img
+                          src={slide.image_url}
+                          alt={slide.alt_text}
+                          loading="lazy"
+                          className="w-full h-auto object-contain"
+                        />
+                      </a>
+                    ) : (
+                      <div className="relative overflow-hidden rounded-3xl border shadow-lift w-full bg-background">
+                        <img
+                          src={slide.image_url}
+                          alt={slide.alt_text}
+                          loading="lazy"
+                          className="w-full h-auto object-contain"
+                        />
+                      </div>
+                    )}
+                  </CarouselItem>
+                ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-4" />
+            <CarouselNext className="right-4" />
+          </Carousel>
+        ) : null}
       </section>
 
       {/* Seção de Localização com Mapa */}
