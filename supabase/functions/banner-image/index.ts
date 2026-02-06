@@ -154,10 +154,23 @@ serve(async (req) => {
       mode,
     });
 
+    console.log("=== BANNER-IMAGE DEBUG ===");
+    console.log("Theme:", theme);
+    console.log("ArtText:", artText);
+    console.log("LogoUrl received:", logoUrl ? `YES (${logoUrl.substring(0, 100)}...)` : "NO");
+    console.log("StyleAdjustments:", styleAdjustments);
+    console.log("Mode:", mode);
+    console.log("Full prompt:", prompt);
+
     const userContent: any[] = [{ type: "text", text: prompt }];
     if (logoUrl) {
+      console.log("Adding logo to AI request as image_url");
       userContent.push({ type: "image_url", image_url: { url: logoUrl } });
+    } else {
+      console.log("No logo provided, skipping image_url");
     }
+
+    console.log("UserContent structure:", JSON.stringify(userContent.map(c => c.type)));
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
