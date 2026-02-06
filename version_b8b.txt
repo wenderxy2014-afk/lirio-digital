@@ -1,4 +1,4 @@
-// Lovable Cloud Function: banner-image
+﻿// Lovable Cloud Function: banner-image
 // Generates a wide cinematic banner (3:1) using Lovable AI image generation,
 // uploads it to storage, and returns the public URL.
 
@@ -44,11 +44,11 @@ async function requireAdminOrEditor(req: Request, admin: any) {
 
   if (rolesError) {
     console.error("banner-image roles check error:", rolesError);
-    return { ok: false as const, status: 500 as const, error: "Falha ao validar permissões." };
+    return { ok: false as const, status: 500 as const, error: "Falha ao validar permiss├Áes." };
   }
 
   if (!roles || roles.length === 0) {
-    return { ok: false as const, status: 403 as const, error: "Sem permissão." };
+    return { ok: false as const, status: 403 as const, error: "Sem permiss├úo." };
   }
 
   return { ok: true as const, userId };
@@ -89,11 +89,7 @@ function buildBannerPrompt(input: {
 
   if (input.hasLogo) {
     prompt +=
-      " CRITICAL REQUIREMENT: The user has uploaded a logo image that you MUST incorporate EXACTLY into the generated banner. " +
-      "Place this EXACT logo (preserving its original design, colors, and proportions) in the bottom-right corner of the banner. " +
-      "The logo must be clearly visible but not obstruct the main content. " +
-      "DO NOT redesign, recreate, or reinterpret the logo - USE THE EXACT IMAGE PROVIDED as-is. " +
-      "This is a branding requirement and the logo must appear exactly as provided in the input image.";
+      " Place a small logo in the bottom-right corner, without covering the main text. Use the provided logo image as reference.";
   }
 
   if (input.styleAdjustments?.trim()) {
@@ -137,7 +133,7 @@ serve(async (req) => {
     const body = (await req.json().catch(() => ({}))) as Partial<BannerRequest>;
     const theme = String(body.theme ?? "").trim();
     if (!theme) {
-      return new Response(JSON.stringify({ error: "Tema da imagem é obrigatório." }), {
+      return new Response(JSON.stringify({ error: "Tema da imagem ├® obrigat├│rio." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -158,21 +154,10 @@ serve(async (req) => {
       mode,
     });
 
-    // DEBUG: Log para verificar se a logo está chegando
-    console.log("=== BANNER-IMAGE DEBUG ===");
-    console.log("Theme:", theme);
-    console.log("LogoUrl:", logoUrl ? "PROVIDED" : "NOT PROVIDED");
-    if (logoUrl) {
-      console.log("LogoUrl starts with:", logoUrl.substring(0, 80));
-    }
-
     const userContent: any[] = [{ type: "text", text: prompt }];
     if (logoUrl) {
-      console.log("Adding logo image_url to request");
       userContent.push({ type: "image_url", image_url: { url: logoUrl } });
     }
-
-    console.log("UserContent types:", userContent.map(c => c.type).join(", "));
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -191,14 +176,14 @@ serve(async (req) => {
       const t = await aiResp.text();
       console.error("banner-image ai gateway error:", aiResp.status, t);
       if (aiResp.status === 429) {
-        return new Response(JSON.stringify({ error: "Muitas requisições. Tente novamente em instantes." }), {
+        return new Response(JSON.stringify({ error: "Muitas requisi├º├Áes. Tente novamente em instantes." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (aiResp.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Créditos de IA esgotados. Adicione créditos e tente novamente." }),
+          JSON.stringify({ error: "Cr├®ditos de IA esgotados. Adicione cr├®ditos e tente novamente." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
