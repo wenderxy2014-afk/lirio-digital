@@ -279,6 +279,7 @@ export function PastorPearlsBanner() {
                                 <HistoryViewer
                                     title="Histórico de Pérolas"
                                     items={historyItems}
+                                    triggerClassName="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
                                 />
                             )}
                         </CardContent>

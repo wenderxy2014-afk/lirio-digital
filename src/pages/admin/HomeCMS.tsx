@@ -9,7 +9,7 @@ import {
   BreadcrumbPage
 } from "@/components/ui/breadcrumb";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Layout, Image, Type, MousePointerClick, Save, Loader2, Megaphone, ArrowLeft } from "lucide-react";
+import { Layout, Image, Type, MousePointerClick, Save, Loader2, Megaphone, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { ImageUploader } from "@/components/admin/ImageUploader";
+import { AIBannerGeneratorDialog } from "@/components/admin/AIBannerGeneratorDialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -132,6 +133,10 @@ export default function HomeCMSPage() {
 
   // Ticker section state
   const [tickerForm, setTickerForm] = useState<TickerConfig>(defaultTickerConfig);
+
+  // AI Banner Generator dialog state
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [aiDialogSlideIndex, setAiDialogSlideIndex] = useState<number | null>(null);
 
   // Map to resolve asset paths to actual imports
   const assetMap: Record<string, string> = {
@@ -788,9 +793,23 @@ export default function HomeCMSPage() {
                         targetWidth={1200}
                         targetHeight={400}
                       />
-                      <p className="text-xs text-muted-foreground">
-                        ✅ Imagem será padronizada automaticamente para 1200 x 400 px (panorâmica)
-                      </p>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-3">
+                        <p className="text-xs text-muted-foreground">
+                          ✅ Imagem será padronizada automaticamente para 1200 x 400 px (panorâmica)
+                        </p>
+                        <Button
+                          type="button"
+                          size="default"
+                          onClick={() => {
+                            setAiDialogSlideIndex(index);
+                            setAiDialogOpen(true);
+                          }}
+                          className="shrink-0 gap-2 bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 text-white font-semibold shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105 transition-all duration-300 border-0"
+                        >
+                          <Sparkles className="h-4 w-4 animate-pulse" />
+                          ✨ Gerar com IA
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
@@ -856,6 +875,25 @@ export default function HomeCMSPage() {
 
 
       </Tabs>
+
+      {/* AI Banner Generator Dialog */}
+      <AIBannerGeneratorDialog
+        open={aiDialogOpen}
+        onOpenChange={(open) => {
+          setAiDialogOpen(open);
+          if (!open) setAiDialogSlideIndex(null);
+        }}
+        onGenerated={(publicUrl) => {
+          if (aiDialogSlideIndex !== null) {
+            const newSlides = [...carouselForm.slides];
+            newSlides[aiDialogSlideIndex].image_url = publicUrl;
+            setCarouselForm({ ...carouselForm, slides: newSlides });
+          }
+          setAiDialogOpen(false);
+          setAiDialogSlideIndex(null);
+        }}
+        defaultTheme={aiDialogSlideIndex !== null ? carouselForm.slides[aiDialogSlideIndex]?.alt_text : undefined}
+      />
     </SiteLayout>
   );
 }

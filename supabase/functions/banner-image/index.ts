@@ -89,7 +89,7 @@ function buildBannerPrompt(input: {
 
   if (input.hasLogo) {
     prompt +=
-      " Place a small logo in the bottom-right corner, without covering the main text. Use the provided logo image as reference.";
+      " IMPORTANT: The user has provided a logo image. You MUST incorporate this EXACT logo into the banner. Place the logo prominently in the bottom-right corner of the banner, maintaining its original colors and proportions. The logo should be clearly visible but not obstruct the main content. Do NOT create a new logo - use the provided logo image exactly as given.";
   }
 
   if (input.styleAdjustments?.trim()) {

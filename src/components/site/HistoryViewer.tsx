@@ -13,13 +13,17 @@ export interface HistoryItem {
     subTitle?: string; // Para autor ou referência bíblica
 }
 
+import { cn } from "@/lib/utils";
+
 interface HistoryViewerProps {
     title: string;
     items: HistoryItem[];
-    triggerVerify?: boolean; // Se true, verifica se tem items antes de mostrar o trigger (opcional, pode ser controlado fora)
+    triggerVerify?: boolean;
+    triggerClassName?: string;
+    triggerText?: string;
 }
 
-export function HistoryViewer({ title, items }: HistoryViewerProps) {
+export function HistoryViewer({ title, items, triggerClassName, triggerText = "Ver postagens anteriores" }: HistoryViewerProps) {
     const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
@@ -31,9 +35,14 @@ export function HistoryViewer({ title, items }: HistoryViewerProps) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" className="mt-6 w-full gap-2 border-primary/20 hover:bg-primary/5">
+                <Button
+                    className={cn(
+                        "mt-6 w-full gap-2 border-0 shadow-md transition-all hover:-translate-y-0.5",
+                        triggerClassName || "bg-primary text-primary-foreground hover:bg-primary/90"
+                    )}
+                >
                     <History className="h-4 w-4" />
-                    Ver postagens anteriores
+                    {triggerText}
                 </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">

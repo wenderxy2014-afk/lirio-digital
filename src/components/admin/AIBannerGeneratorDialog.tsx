@@ -56,7 +56,7 @@ export function AIBannerGeneratorDialog({ open, onOpenChange, onGenerated, defau
 
   return (
     <Dialog open={open} onOpenChange={(v) => !gen.isPending && onOpenChange(v)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5" />
@@ -67,7 +67,7 @@ export function AIBannerGeneratorDialog({ open, onOpenChange, onGenerated, defau
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 overflow-y-auto pr-1 max-h-[calc(90vh-12rem)]">
+        <div className="space-y-5 overflow-y-auto pr-1 flex-1 min-h-0">
           <div className="space-y-2">
             <Label>Tema da imagem</Label>
             <Input value={theme} onChange={(e) => setTheme(e.target.value)} placeholder='Ex.: "Culto da Família"' />
