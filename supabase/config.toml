@@ -14,3 +14,17 @@ verify_jwt = false
 
 [functions.banner-image]
 verify_jwt = false
+
+# Authentication configuration
+[auth]
+site_url = "https://www.liriobh.com"
+additional_redirect_urls = [
+  "https://www.liriobh.com/auth/reset-password",
+  "https://www.liriobh.com/**",
+  "http://localhost:8080/**"
+]
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
