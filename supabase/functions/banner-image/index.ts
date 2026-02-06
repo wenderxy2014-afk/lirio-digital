@@ -158,21 +158,10 @@ serve(async (req) => {
       mode,
     });
 
-    // DEBUG: Log para verificar se a logo está chegando
-    console.log("=== BANNER-IMAGE DEBUG ===");
-    console.log("Theme:", theme);
-    console.log("LogoUrl:", logoUrl ? "PROVIDED" : "NOT PROVIDED");
-    if (logoUrl) {
-      console.log("LogoUrl starts with:", logoUrl.substring(0, 80));
-    }
-
     const userContent: any[] = [{ type: "text", text: prompt }];
     if (logoUrl) {
-      console.log("Adding logo image_url to request");
       userContent.push({ type: "image_url", image_url: { url: logoUrl } });
     }
-
-    console.log("UserContent types:", userContent.map(c => c.type).join(", "));
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.banner-image]
 verify_jwt = false
 
+[functions.follow-redirect]
+verify_jwt = false
+
 # Authentication configuration
 [auth]
 site_url = "https://www.liriobh.com"
