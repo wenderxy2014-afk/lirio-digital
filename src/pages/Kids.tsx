@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { KidsDailyQuiz } from "@/components/kids/KidsDailyQuiz";
+import { KidsMaterialCard } from "@/components/kids/KidsMaterialCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useKids, useKidsDailyList, useKidsDailyToday } from "@/data/queries";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, Type } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import kidsBoyNew from "@/assets/kids-boy-new.png";
@@ -12,7 +13,7 @@ import kidsGroupNew from "@/assets/kids-group-new.png";
 
 export default function KidsPage() {
   const { data: today, isLoading: isTodayLoading, error: todayError } = useKidsDailyToday();
-  const { data: dailyList } = useKidsDailyList(14);
+  const { data: dailyList } = useKidsDailyList(7);
   const { data } = useKids();
 
   const [fontScale, setFontScale] = useState(1); // 1 = 16px (1rem) standard base
@@ -139,31 +140,8 @@ export default function KidsPage() {
               </header>
 
               <div className="grid gap-6 md:grid-cols-2">
-                {(data ?? []).map((k) => (
-                  <Card key={k.id} className="overflow-hidden border-2 border-purple-100 hover:border-purple-300 transition-colors group">
-                    <CardHeader className="bg-purple-50 group-hover:bg-purple-100 transition-colors">
-                      <CardTitle className="font-display text-lg text-purple-800">{k.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-left p-5">
-                      <p className="text-slate-600 leading-snug">{k.body ?? "Conteúdo a confirmar"}</p>
-                      <div className="mt-4 flex flex-wrap gap-3">
-                        {k.video_url && (
-                          <Button asChild size="sm" variant="outline" className="text-xs h-8 bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:border-red-300">
-                            <a href={k.video_url} target="_blank" rel="noreferrer">
-                              📺 Assistir vídeo
-                            </a>
-                          </Button>
-                        )}
-                        {k.download_url && (
-                          <Button asChild size="sm" variant="outline" className="text-xs h-8 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:border-blue-300">
-                            <a href={k.download_url} target="_blank" rel="noreferrer">
-                              📥 Baixar
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                {(data ?? []).slice(0, 8).map((k) => (
+                  <KidsMaterialCard key={k.id} material={k} />
                 ))}
               </div>
             </section>
@@ -179,7 +157,9 @@ export default function KidsPage() {
                   {(dailyList ?? []).map((d) => (
                     <li key={d.id} className="rounded-xl border border-slate-100 bg-white p-3 hover:border-sky-200 hover:shadow-md transition-all cursor-default">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-sky-500 uppercase">{d.day}</span>
+                        <span className="text-xs font-bold text-sky-500 uppercase">
+                          {d.day ? new Date(d.day).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''}
+                        </span>
                         {d.bible_reference && <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full text-slate-500">{d.bible_reference}</span>}
                       </div>
                       <div className="mt-1 font-bold text-slate-700">{d.title}</div>

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileUploader } from "@/components/admin/FileUploader";
 
 type TableName =
   | "events"
@@ -227,6 +228,14 @@ export function AdminTable({ table }: { table: TableName }) {
                         value={draft[f] ?? ""}
                         onChange={(e) => setDraft((s) => ({ ...s, [f]: e.target.value }))}
                         className="min-h-[150px]"
+                      />
+                    ) : f === "download_url" && table === "kids_contents" ? (
+                      <FileUploader
+                        currentFileUrl={draft[f] ?? ""}
+                        onUploadComplete={(url) => setDraft((s) => ({ ...s, [f]: url }))}
+                        folder="kids-materials"
+                        label="Material para Download (PDF, imagens para colorir)"
+                        accept=".pdf,.png,.jpg,.jpeg,.webp"
                       />
                     ) : f === "status" && table === "missions" ? (
                       <Select value={draft[f] ?? "active"} onValueChange={(v) => setDraft((s) => ({ ...s, [f]: v }))}>
