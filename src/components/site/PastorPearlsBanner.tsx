@@ -115,17 +115,25 @@ export function PastorPearlsBanner() {
         staleTime: 1000 * 60 * 15, // 15 minutos
     });
 
-    // Prepara itens de histórico
+    // Prepara itens de histórico (excluindo a pérola atual)
+    // Nota: Garantir que sempre mostramos algo se houver dados
     const historyItems: HistoryItem[] = (historyData || [])
-        .filter(item => item.id !== latestPearlFull?.id)
+        .filter(item => {
+            // Se não temos a pérola atual carregada ainda, mostra tudo
+            if (!latestPearlFull) return true;
+            // Caso contrário, filtra a pérola atual
+            return item.id !== latestPearlFull.id;
+        })
         .slice(0, 7)
         .map(item => ({
             id: item.id,
             title: item.title,
             date: item.created_at,
-            content: item.body,
+            content: item.body || 'Conteúdo não disponível',
             subTitle: item.author || undefined
         }));
+
+
 
     // Não mostra o banner se estiver desativado ou não houver pérola publicada
     if (!bannerEnabled || !latestPearlFull) return null;
@@ -203,24 +211,26 @@ export function PastorPearlsBanner() {
                                 <span>Pérola do Pastor</span>
                             </div>
 
-                            {/* Aviso de Nova Postagem */}
+                            {/* Aviso de Nova Postagem - Destaque Melhorado */}
                             {isNewPost && (
                                 <div className="hidden md:flex items-center gap-3 mx-4 flex-1 justify-center">
                                     <div
-                                        className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium animate-pulse"
+                                        className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold shadow-lg"
                                         style={{
-                                            backgroundColor: "rgba(255,255,255,0.2)",
-                                            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.3)",
+                                            backgroundColor: "rgba(255,255,255,0.95)",
+                                            color: "#047857",
+                                            boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(16,185,129,0.3)",
                                         }}
                                     >
-                                        <Sparkles className="h-3 w-3" />
-                                        <span className="max-w-[200px] truncate">{latestPearlFull.title}</span>
-                                        <span className="opacity-70">•</span>
-                                        <span className="opacity-70">{formattedDate}</span>
+                                        <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+                                        <span className="text-emerald-700 font-bold">NOVO!</span>
+                                        <span className="max-w-[180px] truncate text-gray-800">{latestPearlFull.title}</span>
+                                        <span className="text-emerald-600/60">•</span>
+                                        <span className="text-emerald-600">{formattedDate}</span>
                                         {latestPearlFull.author && (
                                             <>
-                                                <span className="opacity-70">•</span>
-                                                <span className="opacity-70">{latestPearlFull.author}</span>
+                                                <span className="text-emerald-600/60">•</span>
+                                                <span className="text-emerald-600 font-medium">{latestPearlFull.author}</span>
                                             </>
                                         )}
                                     </div>

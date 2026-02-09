@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, Calendar, History } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface HistoryItem {
     id: string;
@@ -12,8 +13,6 @@ export interface HistoryItem {
     content: string;
     subTitle?: string; // Para autor ou referência bíblica
 }
-
-import { cn } from "@/lib/utils";
 
 interface HistoryViewerProps {
     title: string;
@@ -27,13 +26,11 @@ export function HistoryViewer({ title, items, triggerClassName, triggerText = "V
     const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
-    const handleClose = () => {
-        setIsOpen(false);
-        setSelectedItem(null);
-    };
-
     return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <Dialog open={isOpen} onOpenChange={(open) => {
+            setIsOpen(open);
+            if (!open) setSelectedItem(null);
+        }}>
             <DialogTrigger asChild>
                 <Button
                     className={cn(
@@ -45,8 +42,8 @@ export function HistoryViewer({ title, items, triggerClassName, triggerText = "V
                     {triggerText}
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
-                <DialogHeader className="p-6 pb-2 shrink-0">
+            <DialogContent className="max-w-2xl max-h-[85vh] p-0 overflow-hidden">
+                <DialogHeader className="p-6 pb-2">
                     <DialogTitle className="flex items-center gap-2 text-xl">
                         {selectedItem && (
                             <Button
@@ -62,79 +59,74 @@ export function HistoryViewer({ title, items, triggerClassName, triggerText = "V
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="flex-1 overflow-hidden relative">
-                    {/* Lista de Histórico */}
-                    <div className={`absolute inset-0 transition-transform duration-300 ${selectedItem ? "-translate-x-full" : "translate-x-0"}`}>
-                        <ScrollArea className="h-full p-6 pt-2">
-                            {items.length === 0 ? (
-                                <p className="text-center text-muted-foreground py-8">Nenhuma postagem anterior encontrada.</p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {items.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            onClick={() => setSelectedItem(item)}
-                                            className="p-4 rounded-xl border bg-card hover:bg-accent/50 transition-colors cursor-pointer group"
-                                        >
-                                            <div className="flex justify-between items-start gap-4">
-                                                <div>
-                                                    <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                                                        {item.title}
-                                                    </h3>
-                                                    <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                                                        <Calendar className="h-3 w-3" />
-                                                        <span>{new Date(item.date).toLocaleDateString("pt-BR")}</span>
-                                                        {item.subTitle && (
-                                                            <>
-                                                                <span>•</span>
-                                                                <span>{item.subTitle}</span>
-                                                            </>
-                                                        )}
-                                                    </div>
+                {/* Conteúdo - Renderização Condicional Simples */}
+                {!selectedItem ? (
+                    // Lista de Histórico
+                    <ScrollArea className="h-[60vh] px-6 pb-6">
+                        {items.length === 0 ? (
+                            <p className="text-center text-muted-foreground py-8">Nenhuma postagem anterior encontrada.</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {items.map((item) => (
+                                    <div
+                                        key={item.id}
+                                        onClick={() => setSelectedItem(item)}
+                                        className="p-4 rounded-xl border bg-card hover:bg-accent/50 transition-colors cursor-pointer group"
+                                    >
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div>
+                                                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                                                    {item.title}
+                                                </h3>
+                                                <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                                                    <Calendar className="h-3 w-3" />
+                                                    <span>{new Date(item.date).toLocaleDateString("pt-BR")}</span>
+                                                    {item.subTitle && (
+                                                        <>
+                                                            <span>•</span>
+                                                            <span>{item.subTitle}</span>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                                                {item.content}
-                                            </p>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </ScrollArea>
-                    </div>
-
-                    {/* Detalhe do Item */}
-                    <div className={`absolute inset-0 bg-background transition-transform duration-300 ${selectedItem ? "translate-x-0" : "translate-x-full"}`}>
-                        {selectedItem && (
-                            <ScrollArea className="h-full p-6 pt-2">
-                                <article className="prose dark:prose-invert max-w-none">
-                                    <div className="mb-6 pb-4 border-b">
-                                        <h2 className="text-2xl font-bold mb-2 text-foreground">{selectedItem.title}</h2>
-                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-                                            <div className="flex items-center gap-1.5">
-                                                <Calendar className="h-4 w-4" />
-                                                {new Date(selectedItem.date).toLocaleDateString("pt-BR", {
-                                                    weekday: 'long',
-                                                    day: 'numeric',
-                                                    month: 'long',
-                                                    year: 'numeric'
-                                                })}
-                                            </div>
-                                            {selectedItem.subTitle && (
-                                                <div className="font-medium text-primary">
-                                                    {selectedItem.subTitle}
-                                                </div>
-                                            )}
-                                        </div>
+                                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                                            {item.content}
+                                        </p>
                                     </div>
-                                    <div className="whitespace-pre-wrap leading-relaxed text-foreground/90 pb-8 text-base">
-                                        {selectedItem.content}
-                                    </div>
-                                </article>
-                            </ScrollArea>
+                                ))}
+                            </div>
                         )}
-                    </div>
-                </div>
+                    </ScrollArea>
+                ) : (
+                    // Detalhe do Item
+                    <ScrollArea className="h-[60vh] px-6 pb-6">
+                        <article className="prose dark:prose-invert max-w-none">
+                            <div className="mb-6 pb-4 border-b">
+                                <h2 className="text-2xl font-bold mb-2 text-foreground">{selectedItem.title}</h2>
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar className="h-4 w-4" />
+                                        {new Date(selectedItem.date).toLocaleDateString("pt-BR", {
+                                            weekday: 'long',
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric'
+                                        })}
+                                    </div>
+                                    {selectedItem.subTitle && (
+                                        <div className="font-medium text-primary">
+                                            {selectedItem.subTitle}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="whitespace-pre-wrap leading-relaxed text-foreground/90 pb-8 text-base">
+                                {selectedItem.content}
+                            </div>
+                        </article>
+                    </ScrollArea>
+                )}
             </DialogContent>
         </Dialog>
     );
