@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Crown, Minus, Plus, Type } from "lucide-react";
+import { Crown, Minus, Plus, Type, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HistoryViewer, HistoryItem } from "./HistoryViewer";
 
@@ -130,6 +130,19 @@ export function PastorPearlsBanner() {
     // Não mostra o banner se estiver desativado ou não houver pérola publicada
     if (!bannerEnabled || !latestPearlFull) return null;
 
+    // Verificar se é uma postagem nova (menos de 24 horas)
+    const now = new Date();
+    const postDate = new Date(latestPearlFull.created_at);
+    const hoursDiff = (now.getTime() - postDate.getTime()) / (1000 * 60 * 60);
+    const isNewPost = hoursDiff < 24;
+
+    // Formatar data para exibição
+    const formattedDate = new Date(latestPearlFull.created_at).toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
+
     // Obter estilos
     const styleConfig = BANNER_STYLES[bannerStyle];
     const textColor = FONT_COLORS[fontColor];
@@ -190,6 +203,30 @@ export function PastorPearlsBanner() {
                                 <span>Pérola do Pastor</span>
                             </div>
 
+                            {/* Aviso de Nova Postagem */}
+                            {isNewPost && (
+                                <div className="hidden md:flex items-center gap-3 mx-4 flex-1 justify-center">
+                                    <div
+                                        className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium animate-pulse"
+                                        style={{
+                                            backgroundColor: "rgba(255,255,255,0.2)",
+                                            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.3)",
+                                        }}
+                                    >
+                                        <Sparkles className="h-3 w-3" />
+                                        <span className="max-w-[200px] truncate">{latestPearlFull.title}</span>
+                                        <span className="opacity-70">•</span>
+                                        <span className="opacity-70">{formattedDate}</span>
+                                        {latestPearlFull.author && (
+                                            <>
+                                                <span className="opacity-70">•</span>
+                                                <span className="opacity-70">{latestPearlFull.author}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             <span className="shrink-0 text-sm font-semibold">
                                 <span
                                     className="inline-flex items-center gap-2 rounded-xl px-3 py-1 transition-colors"
@@ -198,7 +235,7 @@ export function PastorPearlsBanner() {
                                         boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.3)",
                                     }}
                                 >
-                                    {isExpanded ? "Fechar" : "Ler agora"}
+                                    {isExpanded ? "Fechar" : isNewPost ? "🆕 Ler agora" : "Ler agora"}
                                     <span className={`inline-block h-1.5 w-1.5 rounded-full bg-current ${isExpanded ? "" : "animate-pulse"}`} />
                                 </span>
                             </span>
