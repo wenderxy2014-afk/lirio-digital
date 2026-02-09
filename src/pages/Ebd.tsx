@@ -121,6 +121,60 @@ export default function EbdPage() {
         </div>
       </header>
 
+      {/* Banner de Destaque do Devocional de Hoje */}
+      {!isRefreshing && today && !today.title.toUpperCase().includes("[RASCUNHO]") && (
+        <div className="mt-6">
+          <div
+            className="relative overflow-hidden rounded-2xl p-4 md:p-5 shadow-lg cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+            style={{
+              background: "linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #06b6d4 100%)",
+              boxShadow: "0 10px 30px -10px rgba(16, 185, 129, 0.4)"
+            }}
+            onClick={() => {
+              const card = document.getElementById('devocional-hoje');
+              card?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+          >
+            {/* Efeito de brilho */}
+            <div
+              className="pointer-events-none absolute inset-0 opacity-30"
+              style={{
+                backgroundImage: "radial-gradient(600px circle at 30% 20%, rgba(255,255,255,0.3), transparent 40%)"
+              }}
+            />
+
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
+              {/* Info do Devocional */}
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur">
+                  <BookOpen className="h-6 w-6 text-white" />
+                </div>
+                <div className="text-white">
+                  <div className="text-sm font-medium opacity-90">📖 Devocional de Hoje</div>
+                  <div className="font-display text-xl md:text-2xl font-bold">{today.title}</div>
+                </div>
+              </div>
+
+              {/* Badge de Destaque com Data */}
+              <div
+                className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold shadow-lg"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.95)",
+                  color: "#047857",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(16,185,129,0.3)",
+                }}
+              >
+                <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+                <Calendar className="h-4 w-4 text-emerald-600" />
+                <span className="text-emerald-700">{today.day.split("-").reverse().join("/")}</span>
+                <span className="text-emerald-600/60">•</span>
+                <span className="text-emerald-600">Clique para ler</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className="mt-10 space-y-8">
         {isRefreshing && (
           <div className="flex items-center justify-center rounded-3xl border border-dashed bg-gradient-to-br from-background to-primary/5 p-12">
@@ -133,12 +187,14 @@ export default function EbdPage() {
 
         {/* Destaque de Hoje */}
         {!isRefreshing && today && !today.title.toUpperCase().includes("[RASCUNHO]") && (
-          <DevotionalCard
-            devotional={today}
-            defaultExpanded={true}
-            label="Devocional de hoje"
-            isHighlighted={true}
-          />
+          <div id="devocional-hoje">
+            <DevotionalCard
+              devotional={today}
+              defaultExpanded={true}
+              label="Devocional de hoje"
+              isHighlighted={true}
+            />
+          </div>
         )}
 
         {!isRefreshing && (!today || today.title.toUpperCase().includes("[RASCUNHO]")) && (
