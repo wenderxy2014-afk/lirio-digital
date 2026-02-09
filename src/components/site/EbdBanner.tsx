@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useEbdDevotionalToday, useEbdDevotionalsList } from "@/data/ebd";
-import { BookOpen, Minus, Plus, Type, History } from "lucide-react";
+import { BookOpen, Minus, Plus, Type, History, Sparkles, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "@/components/NavLink";
 import { HistoryItem } from "./HistoryViewer";
@@ -48,6 +48,26 @@ export function EbdBanner() {
               <BookOpen className="h-4 w-4" />
               <span>Devocional do dia (EBD)</span>
             </div>
+
+            {/* Destaque com Data e Título */}
+            {data && !isRefreshing && (
+              <div className="hidden md:flex items-center gap-3 mx-4 flex-1 justify-center">
+                <div
+                  className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold shadow-lg"
+                  style={{
+                    backgroundColor: "rgba(255,255,255,0.95)",
+                    color: "#be185d",
+                    boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(219,39,119,0.3)",
+                  }}
+                >
+                  <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+                  <span className="text-pink-700 font-bold max-w-[180px] truncate">{data.title}</span>
+                  <span className="text-pink-600/60">•</span>
+                  <Calendar className="h-4 w-4 text-pink-600" />
+                  <span className="text-pink-700">{data.day.split("-").reverse().join("/")}</span>
+                </div>
+              </div>
+            )}
 
             <span className="shrink-0 text-sm font-semibold">
               <span className="inline-flex items-center gap-2 rounded-xl bg-background/10 px-3 py-1 ring-1 ring-white/20 transition-colors group-hover:bg-background/20">
