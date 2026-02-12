@@ -205,50 +205,73 @@ export function PastorPearlsBanner() {
                             }}
                         />
 
-                        <div className="relative z-10 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-base md:text-lg font-bold">
-                                <Crown className="h-4 w-4" />
-                                <span>Pérola do Pastor</span>
-                            </div>
+                        <div className="relative z-10 flex flex-col gap-2">
+                            {/* Linha principal: Título + Destaque (desktop) + Botão */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-sm md:text-lg font-bold">
+                                    <Crown className="h-4 w-4 shrink-0" />
+                                    <span className="whitespace-nowrap">Pérola do Pastor</span>
+                                </div>
 
-                            {/* Aviso de Nova Postagem - Destaque Melhorado */}
-                            {isNewPost && (
-                                <div className="hidden md:flex items-center gap-3 mx-4 flex-1 justify-center">
-                                    <div
-                                        className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold shadow-lg"
+                                {/* Aviso de Nova Postagem - DESKTOP */}
+                                {isNewPost && (
+                                    <div className="hidden md:flex items-center gap-3 mx-4 flex-1 justify-center">
+                                        <div
+                                            className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold shadow-lg"
+                                            style={{
+                                                backgroundColor: "rgba(255,255,255,0.95)",
+                                                color: "#047857",
+                                                boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(16,185,129,0.3)",
+                                            }}
+                                        >
+                                            <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+                                            <span className="text-emerald-700 font-bold">NOVO!</span>
+                                            <span className="max-w-[180px] truncate text-gray-800">{latestPearlFull.title}</span>
+                                            <span className="text-emerald-600/60">•</span>
+                                            <span className="text-emerald-600">{formattedDate}</span>
+                                            {latestPearlFull.author && (
+                                                <>
+                                                    <span className="text-emerald-600/60">•</span>
+                                                    <span className="text-emerald-600 font-medium">{latestPearlFull.author}</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <span className="shrink-0 text-sm font-semibold">
+                                    <span
+                                        className="inline-flex items-center gap-2 rounded-xl px-3 py-1 transition-colors"
                                         style={{
-                                            backgroundColor: "rgba(255,255,255,0.95)",
-                                            color: "#047857",
-                                            boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(16,185,129,0.3)",
+                                            backgroundColor: "rgba(255,255,255,0.15)",
+                                            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.3)",
                                         }}
                                     >
-                                        <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+                                        {isExpanded ? "Fechar" : isNewPost ? "🆕 Ler agora" : "Ler agora"}
+                                        <span className={`inline-block h-1.5 w-1.5 rounded-full bg-current ${isExpanded ? "" : "animate-pulse"}`} />
+                                    </span>
+                                </span>
+                            </div>
+
+                            {/* Aviso de Nova Postagem - MOBILE (segunda linha) */}
+                            {isNewPost && (
+                                <div className="flex md:hidden items-center justify-center">
+                                    <div
+                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold shadow-md w-full justify-center"
+                                        style={{
+                                            backgroundColor: "rgba(255,255,255,0.93)",
+                                            color: "#047857",
+                                            boxShadow: "0 2px 12px rgba(0,0,0,0.12), inset 0 0 0 1.5px rgba(16,185,129,0.25)",
+                                        }}
+                                    >
+                                        <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse shrink-0" />
                                         <span className="text-emerald-700 font-bold">NOVO!</span>
-                                        <span className="max-w-[180px] truncate text-gray-800">{latestPearlFull.title}</span>
+                                        <span className="truncate max-w-[35%] text-gray-800">{latestPearlFull.title}</span>
                                         <span className="text-emerald-600/60">•</span>
-                                        <span className="text-emerald-600">{formattedDate}</span>
-                                        {latestPearlFull.author && (
-                                            <>
-                                                <span className="text-emerald-600/60">•</span>
-                                                <span className="text-emerald-600 font-medium">{latestPearlFull.author}</span>
-                                            </>
-                                        )}
+                                        <span className="text-emerald-600 whitespace-nowrap">{formattedDate}</span>
                                     </div>
                                 </div>
                             )}
-
-                            <span className="shrink-0 text-sm font-semibold">
-                                <span
-                                    className="inline-flex items-center gap-2 rounded-xl px-3 py-1 transition-colors"
-                                    style={{
-                                        backgroundColor: "rgba(255,255,255,0.15)",
-                                        boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.3)",
-                                    }}
-                                >
-                                    {isExpanded ? "Fechar" : isNewPost ? "🆕 Ler agora" : "Ler agora"}
-                                    <span className={`inline-block h-1.5 w-1.5 rounded-full bg-current ${isExpanded ? "" : "animate-pulse"}`} />
-                                </span>
-                            </span>
                         </div>
                     </div>
                 </Card>

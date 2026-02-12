@@ -43,38 +43,61 @@ export function EbdBanner() {
             }}
           />
 
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-base md:text-lg font-bold">
-              <BookOpen className="h-4 w-4" />
-              <span>Devocional do dia (EBD)</span>
+          <div className="relative z-10 flex flex-col gap-2">
+            {/* Linha principal: Título + Destaque (desktop inline) + Botão */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm md:text-lg font-bold">
+                <BookOpen className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">Devocional do dia (EBD)</span>
+              </div>
+
+              {/* Destaque com Data e Título - DESKTOP */}
+              {data && !isRefreshing && (
+                <div className="hidden md:flex items-center gap-3 mx-4 flex-1 justify-center">
+                  <div
+                    className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold shadow-lg"
+                    style={{
+                      backgroundColor: "rgba(255,255,255,0.95)",
+                      color: "#be185d",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(219,39,119,0.3)",
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+                    <span className="text-pink-700 font-bold max-w-[180px] truncate">{data.title}</span>
+                    <span className="text-pink-600/60">•</span>
+                    <Calendar className="h-4 w-4 text-pink-600" />
+                    <span className="text-pink-700">{data.day.split("-").reverse().join("/")}</span>
+                  </div>
+                </div>
+              )}
+
+              <span className="shrink-0 text-sm font-semibold">
+                <span className="inline-flex items-center gap-2 rounded-xl bg-background/10 px-3 py-1 ring-1 ring-white/20 transition-colors group-hover:bg-background/20">
+                  {isExpanded ? "Fechar" : "Ler agora"}
+                  <span className={`inline-block h-1.5 w-1.5 rounded-full bg-primary-foreground ${isExpanded ? "" : "pulse"}`} />
+                </span>
+              </span>
             </div>
 
-            {/* Destaque com Data e Título */}
+            {/* Destaque com Data e Título - MOBILE (segunda linha) */}
             {data && !isRefreshing && (
-              <div className="hidden md:flex items-center gap-3 mx-4 flex-1 justify-center">
+              <div className="flex md:hidden items-center justify-center">
                 <div
-                  className="flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-bold shadow-lg"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold shadow-md w-full justify-center"
                   style={{
-                    backgroundColor: "rgba(255,255,255,0.95)",
+                    backgroundColor: "rgba(255,255,255,0.93)",
                     color: "#be185d",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 0 0 2px rgba(219,39,119,0.3)",
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.12), inset 0 0 0 1.5px rgba(219,39,119,0.25)",
                   }}
                 >
-                  <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
-                  <span className="text-pink-700 font-bold max-w-[180px] truncate">{data.title}</span>
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse shrink-0" />
+                  <span className="text-pink-700 font-bold truncate max-w-[45%]">{data.title}</span>
                   <span className="text-pink-600/60">•</span>
-                  <Calendar className="h-4 w-4 text-pink-600" />
-                  <span className="text-pink-700">{data.day.split("-").reverse().join("/")}</span>
+                  <Calendar className="h-3.5 w-3.5 text-pink-600 shrink-0" />
+                  <span className="text-pink-700 whitespace-nowrap">{data.day.split("-").reverse().join("/")}</span>
                 </div>
               </div>
             )}
-
-            <span className="shrink-0 text-sm font-semibold">
-              <span className="inline-flex items-center gap-2 rounded-xl bg-background/10 px-3 py-1 ring-1 ring-white/20 transition-colors group-hover:bg-background/20">
-                {isExpanded ? "Fechar" : "Ler agora"}
-                <span className={`inline-block h-1.5 w-1.5 rounded-full bg-primary-foreground ${isExpanded ? "" : "pulse"}`} />
-              </span>
-            </span>
           </div>
         </div>
       </Card>
