@@ -83,14 +83,28 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <nav className="border-t bg-background/60 md:hidden">
-        <div className="mx-auto grid max-w-6xl grid-cols-3 gap-1 px-2 py-2">
-          {nav.slice(0, 6).map((item) => (
+      <nav className="border-t bg-background/60 md:hidden relative">
+        {/* Left fade indicator */}
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background/80 to-transparent z-10" />
+        {/* Right fade indicator */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background/80 to-transparent z-10" />
+
+        <div
+          className="mx-auto flex max-w-6xl items-center gap-1 px-4 py-2 overflow-x-auto scrollbar-hide"
+          style={{
+            WebkitOverflowScrolling: "touch",
+            scrollSnapType: "x mandatory",
+            msOverflowStyle: "none",
+            scrollbarWidth: "none",
+          }}
+        >
+          {nav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
-              className="rounded-lg px-2 py-2 text-center text-sm text-muted-foreground"
-              activeClassName="bg-accent text-foreground"
+              className="flex-shrink-0 rounded-lg px-3 py-2 text-center text-sm font-medium text-muted-foreground whitespace-nowrap transition-colors"
+              activeClassName="bg-accent text-foreground font-bold"
+              style={{ scrollSnapAlign: "center" }}
             >
               {item.label}
             </NavLink>

@@ -267,6 +267,16 @@ All colors MUST be HSL.
     background: hsl(var(--muted-foreground) / 0.5);
   }
 
+  /* Hide scrollbar for mobile nav carousel */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .scrollbar-thumb-emerald-300::-webkit-scrollbar-thumb {
     background: rgb(110 231 183 / 0.5);
   }
