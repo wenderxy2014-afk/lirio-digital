@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
@@ -17,7 +16,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt", "icons/icon-192.png", "icons/icon-512.png"],
+      includeAssets: ["favicon.png", "favicon.ico", "robots.txt", "icons/icon-192.png", "icons/icon-512.png"],
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
@@ -37,7 +36,6 @@ export default defineConfig(({ mode }) => ({
         ],
       },
     }),
-    mode === "development" && componentTagger(),
   ].filter(Boolean),
   resolve: {
     alias: {
