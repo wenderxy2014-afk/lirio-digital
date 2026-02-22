@@ -25,7 +25,16 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <NavLink to="/" className="flex items-center gap-3">
           <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-brand shadow-glow">
-            <img src={logo} alt="Símbolo da Igreja Batista Lírio dos Vales" className="h-6 w-6" />
+            <img
+              src={logo}
+              alt="Símbolo da Igreja Batista Lírio dos Vales"
+              className="h-6 w-6"
+              width={24}
+              height={24}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+            />
           </span>
           <div className="text-left leading-tight">
             <div className="font-display text-sm tracking-tight">Igreja Batista</div>
