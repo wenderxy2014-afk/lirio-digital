@@ -74,13 +74,11 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              {/* Botão administrativo discreto para quem não está logado */}
+              {/* TODO: TEMPORÁRIO — restaurar AdminLoginDialog após configurar Supabase */}
               <div className="hidden md:block">
-                <AdminLoginDialog>
-                  <button className="text-muted-foreground/30 hover:text-primary transition-colors p-2" title="Acesso Administrativo">
-                    <ShieldCheck className="h-4 w-4" />
-                  </button>
-                </AdminLoginDialog>
+                <NavLink to="/admin" className="text-muted-foreground/30 hover:text-primary transition-colors p-2" title="Acesso Administrativo">
+                  <ShieldCheck className="h-4 w-4" />
+                </NavLink>
               </div>
               <MemberAuthDialog>
                 <Button variant="brand" size="sm">
