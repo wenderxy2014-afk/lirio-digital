@@ -1,4 +1,4 @@
-project_id = "dpxwkuztppsnzktxmnxe"
+project_id = "mlbcbxajwzeocrmijqqf"
 
 [functions.check-admin-exists]
 verify_jwt = false

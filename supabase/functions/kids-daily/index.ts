@@ -1,4 +1,4 @@
-// Supabase Edge Function: kids-daily
+// Lovable Cloud Function: kids-daily
 // Generates the daily Kids package (lesson + activity + quiz) and stores it in the database.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -47,17 +47,17 @@ serve(async (req) => {
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
-    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       throw new Error("Missing backend configuration");
     }
-    if (!OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY is not configured");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: { persistSession: false },
     });
 
@@ -85,14 +85,14 @@ serve(async (req) => {
 
     const user = `Crie o pacote Kids do dia (${day}).\n\nRegras IMPORTANTES:\n- Retorne APENAS JSON válido (sem markdown).\n- Estrutura:\n  {\n    \"title\": string,\n    \"bible_reference\": string,\n    \"lesson_body\": string,\n    \"activity\": string,\n    \"quiz\": [\n      { \"question\": string, \"options\": string[4], \"answer_index\": 0|1|2|3, \"explanation\": string }\n    ]\n  }\n- lesson_body: 700 a 1100 caracteres, com: (1) uma ideia principal, (2) uma aplicação prática para criança, (3) uma oração curtinha (2 linhas).\n- activity: 4 a 7 passos curtos (ex.: desenho, dramatização, desafio em casa).\n- quiz: 5 perguntas, opções bem claras, com explicação curta da resposta.\n- Evite temas pesados; foque em esperança, amor, obediência e fé.\n`;
 
-    const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
+    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
@@ -157,7 +157,7 @@ serve(async (req) => {
       lesson_body,
       activity,
       quiz,
-      model: "gpt-4o-mini",
+      model: "google/gemini-3-flash-preview",
       is_published: true,
     };
 

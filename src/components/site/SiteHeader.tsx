@@ -1,8 +1,10 @@
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
+import { ShieldCheck } from "lucide-react";
 import logo from "@/assets/iblv-logo.png";
 import { useAuth, hasAnyRole } from "@/providers/AuthProvider";
 import { MemberAuthDialog } from "./MemberAuthDialog";
+import { AdminLoginDialog } from "./AdminLoginDialog";
 
 const nav = [
   { to: "/", label: "Início" },
@@ -71,11 +73,19 @@ export function SiteHeader() {
               </Button>
             </>
           ) : (
-            <MemberAuthDialog>
-              <Button variant="brand" size="sm">
-                Membros
-              </Button>
-            </MemberAuthDialog>
+            <>
+              {/* TODO: TEMPORÁRIO — restaurar AdminLoginDialog após configurar Supabase */}
+              <div className="hidden md:block">
+                <NavLink to="/admin" className="text-muted-foreground/30 hover:text-primary transition-colors p-2" title="Acesso Administrativo">
+                  <ShieldCheck className="h-4 w-4" />
+                </NavLink>
+              </div>
+              <MemberAuthDialog>
+                <Button variant="brand" size="sm">
+                  Membros
+                </Button>
+              </MemberAuthDialog>
+            </>
           )}
         </div>
       </div>

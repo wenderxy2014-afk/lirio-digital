@@ -1,4 +1,4 @@
-// Supabase Edge Function: create-admin-user
+ // Lovable Cloud Function: create-admin-user
  // Creates a new admin user with proper role assignment
  
  import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -19,17 +19,17 @@
       // IMPORTANT:
       // Password reset links must always point to the public domain.
       // Using req.headers.get("origin") breaks when the request is triggered from the editor domain
-      // External redirect domains can cause otp_expired/access_denied issues.
+      // (*.lovableproject.com), causing otp_expired/access_denied issues.
       const CUSTOM_PUBLIC_ORIGIN = "https://www.liriobh.com";
 
      const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
+     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
  
-    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
        throw new Error("Missing backend configuration");
        }
  
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
        auth: { persistSession: false },
      });
  

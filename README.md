@@ -1,16 +1,24 @@
-# Igreja Batista Lírio dos Vales
+# Welcome to your Lovable project
 
 ## Project info
 
-Aplicação web com frontend Vite/React e Edge Functions do Supabase.
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-## Desenvolvimento local
+**Use Lovable**
 
-O único requisito local é Node.js com npm instalado.
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+
+Changes made via Lovable will be committed automatically to this repo.
+
+**Use your preferred IDE**
+
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
 Follow these steps:
 
@@ -52,33 +60,14 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## Supabase e IA
+## How can I deploy this project?
 
-O projeto Supabase usado pelas Edge Functions é `dpxwkuztppsnzktxmnxe`.
-Configure estes secrets em **Project Settings > Edge Functions > Secrets**:
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
-```text
-OPENAI_API_KEY
-SERVICE_ROLE_KEY
-ANON_KEY
-```
+## Can I connect a custom domain to my Lovable project?
 
-`SERVICE_ROLE_KEY` é usado apenas no backend para operações administrativas. `ANON_KEY` é usado somente pelo `banner-image` para validar o usuário autenticado. A URL vem do secret padrão `SUPABASE_URL`.
+Yes, you can!
 
-As funções de IA são `ebd-devotional`, `kids-daily` e `banner-image`, usando a API oficial da OpenAI.
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-## Deploy das funções
-
-```sh
-npx supabase link --project-ref dpxwkuztppsnzktxmnxe
-npx supabase db push
-npx supabase functions deploy ebd-devotional
-npx supabase functions deploy kids-daily
-npx supabase functions deploy banner-image
-```
-
-## Deploy do frontend
-
-```sh
-npm run build
-```
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
