@@ -1,4 +1,4 @@
- // Lovable Cloud Function: check-admin-exists
+// Supabase Edge Function: check-admin-exists
  // Verifies if there is at least one admin user in the system
  
  import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -16,13 +16,13 @@
  
    try {
      const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
  
-     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
        throw new Error("Missing backend configuration");
      }
  
-     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
        auth: { persistSession: false },
      });
  

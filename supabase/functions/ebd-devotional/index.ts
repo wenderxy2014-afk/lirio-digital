@@ -1,4 +1,4 @@
-// Lovable Cloud Function: ebd-devotional
+// Supabase Edge Function: ebd-devotional
 // Generates (internally) the daily EBD devotional and stores it in the database.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -29,13 +29,13 @@ serve(async (req) => {
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
 
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
       throw new Error("Missing required environment variables");
     }
 
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
     // Parse request body
    const requestBody = await req.json().catch(() => ({}));
@@ -48,11 +48,10 @@ serve(async (req) => {
       forceNew = false,
    } = requestBody;
 
-   // Use Lovable AI Gateway
-   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+   const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-   if (!LOVABLE_API_KEY) {
-     throw new Error("API Configuration Error: Missing LOVABLE_API_KEY");
+   if (!OPENAI_API_KEY) {
+     throw new Error("API Configuration Error: Missing OPENAI_API_KEY");
     }
 
     const systemPrompt = "Você é um redator cristão evangélico especializado em criar devocionais bíblicos e pastorais para uma igreja local. Você DEVE seguir rigorosamente o tema e tom especificados pelo usuário. Escreva em português do Brasil.";
@@ -108,15 +107,14 @@ Regras:
 - Títulos BLOQUEADOS (NUNCA USE): [${excludedTitles}, "A Rocha que não se Abala"].
 - IMPORTANTE: Crie um título TOTALMENTE novo, poético e inspirador, diferente de qualquer um acima.`;
 
-   // Call Lovable AI Gateway
-   const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+     const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-       Authorization: `Bearer ${LOVABLE_API_KEY}`,
+       Authorization: `Bearer ${OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-       model: "google/gemini-3-flash-preview",
+      model: "gpt-4o-mini",
        messages: [
          { role: "system", content: systemPrompt },
          { role: "user", content: userPrompt }
@@ -128,15 +126,15 @@ Regras:
 
     if (!aiResp.ok) {
       const errorText = await aiResp.text();
-     console.error("Lovable AI Gateway error:", aiResp.status, errorText);
-     throw new Error(`Lovable AI Gateway Error: ${aiResp.statusText}`);
+    console.error("OpenAI API error:", aiResp.status, errorText);
+    throw new Error(`OpenAI API Error: ${aiResp.statusText}`);
     }
 
     const aiJson = await aiResp.json();
    const content = aiJson?.choices?.[0]?.message?.content;
 
     if (!content) {
-     throw new Error("Invalid AI response from Lovable AI Gateway");
+    throw new Error("Invalid AI response from OpenAI");
     }
 
     let parsed: { title: string; bible_reference: string; body: string };
@@ -167,7 +165,7 @@ Regras:
       title,
       bible_reference: bible_reference || null,
       body,
-      model: "google/gemini-3-flash-preview",
+      model: "gpt-4o-mini",
     };
 
     let resultData: Devotional | null = null;

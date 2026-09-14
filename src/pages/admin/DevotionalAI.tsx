@@ -116,11 +116,11 @@ export default function DevotionalAIPage() {
       // 2. Call Edge Function (will insert new record)
       const { data, error } = await supabase.functions.invoke("ebd-devotional", {
         body: {
-          theme: theme,
-          bible_book: bibleBook || undefined,
-          tone: tone,
-          length: 1200,
-          force_new: true,
+          customTheme: theme,
+          customBibleBook: bibleBook || undefined,
+          customTone: tone,
+          customLength: 1200,
+          forceNew: true,
         },
       });
 

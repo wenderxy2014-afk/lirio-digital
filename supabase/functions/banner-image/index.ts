@@ -1,5 +1,5 @@
-// Lovable Cloud Function: banner-image
-// Generates a wide cinematic banner (3:1) using Lovable AI image generation,
+// Supabase Edge Function: banner-image
+// Generates a wide cinematic banner using OpenAI image generation,
 // uploads it to storage, and returns the public URL.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -19,12 +19,12 @@ async function requireAdminOrEditor(req: Request, admin: any) {
   }
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  const ANON_KEY = Deno.env.get("ANON_KEY");
+  if (!SUPABASE_URL || !ANON_KEY) {
     return { ok: false as const, status: 500 as const, error: "Missing backend configuration" };
   }
 
-  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  const authClient = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
   });
 
@@ -117,13 +117,13 @@ serve(async (req) => {
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error("Missing backend configuration");
-    if (!LOVABLE_API_KEY) throw new Error("Missing LOVABLE_API_KEY");
+    if (!SUPABASE_URL || !SERVICE_ROLE_KEY) throw new Error("Missing backend configuration");
+    if (!OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY");
 
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
     // Manual auth (verify_jwt=false) + role gate
     const gate = await requireAdminOrEditor(req, admin);
@@ -158,27 +158,47 @@ serve(async (req) => {
       mode,
     });
 
-    const userContent: any[] = [{ type: "text", text: prompt }];
+    let aiResp: Response;
     if (logoUrl) {
-      userContent.push({ type: "image_url", image_url: { url: logoUrl } });
-    }
+      const logoResponse = await fetch(logoUrl);
+      if (!logoResponse.ok) throw new Error("Não foi possível carregar o logo para edição.");
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3-pro-image-preview",
-        messages: [{ role: "user", content: userContent }],
-        modalities: ["image", "text"],
-      }),
-    });
+      const form = new FormData();
+      form.append("model", "gpt-image-1");
+      form.append("prompt", prompt);
+      form.append("size", "1536x1024");
+      form.append(
+        "image",
+        new File(
+          [await logoResponse.arrayBuffer()],
+          "logo.png",
+          { type: logoResponse.headers.get("content-type") || "image/png" },
+        ),
+      );
+
+      aiResp = await fetch("https://api.openai.com/v1/images/edits", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}` },
+        body: form,
+      });
+    } else {
+      aiResp = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-image-1",
+          prompt,
+          size: "1536x1024",
+        }),
+      });
+    }
 
     if (!aiResp.ok) {
       const t = await aiResp.text();
-      console.error("banner-image ai gateway error:", aiResp.status, t);
+      console.error("banner-image OpenAI error:", aiResp.status, t);
       if (aiResp.status === 429) {
         return new Response(JSON.stringify({ error: "Muitas requisições. Tente novamente em instantes." }), {
           status: 429,
@@ -199,8 +219,9 @@ serve(async (req) => {
     }
 
     const aiJson = await aiResp.json();
-    const imageDataUrl = aiJson?.choices?.[0]?.message?.images?.[0]?.image_url?.url as string | undefined;
-    if (!imageDataUrl) throw new Error("AI did not return an image");
+    const imageBase64 = aiJson?.data?.[0]?.b64_json as string | undefined;
+    if (!imageBase64) throw new Error("OpenAI did not return an image");
+    const imageDataUrl = `data:image/png;base64,${imageBase64}`;
 
     const { bytes, contentType } = dataUrlToBytes(imageDataUrl);
     const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";

@@ -1,24 +1,16 @@
-# Welcome to your Lovable project
+# Igreja Batista Lírio dos Vales
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+Aplicação web com frontend Vite/React e Edge Functions do Supabase.
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
+## Desenvolvimento local
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+O único requisito local é Node.js com npm instalado.
 
 Follow these steps:
 
@@ -60,14 +52,33 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Supabase e IA
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+O projeto Supabase usado pelas Edge Functions é `dpxwkuztppsnzktxmnxe`.
+Configure estes secrets em **Project Settings > Edge Functions > Secrets**:
 
-## Can I connect a custom domain to my Lovable project?
+```text
+OPENAI_API_KEY
+SERVICE_ROLE_KEY
+ANON_KEY
+```
 
-Yes, you can!
+`SERVICE_ROLE_KEY` é usado apenas no backend para operações administrativas. `ANON_KEY` é usado somente pelo `banner-image` para validar o usuário autenticado. A URL vem do secret padrão `SUPABASE_URL`.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+As funções de IA são `ebd-devotional`, `kids-daily` e `banner-image`, usando a API oficial da OpenAI.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## Deploy das funções
+
+```sh
+npx supabase link --project-ref dpxwkuztppsnzktxmnxe
+npx supabase db push
+npx supabase functions deploy ebd-devotional
+npx supabase functions deploy kids-daily
+npx supabase functions deploy banner-image
+```
+
+## Deploy do frontend
+
+```sh
+npm run build
+```
